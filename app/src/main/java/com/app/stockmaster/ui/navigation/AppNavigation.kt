@@ -46,12 +46,21 @@ fun AppNavigation(navController: NavHostController) {
                     onItemClick = { itemId ->
                         navController.navigate(Screen.StockAdjustment.createRoute(itemId))
                     },
+                    onEditItem = { itemId ->
+                        navController.navigate(Screen.EditProduct.createRoute(itemId))
+                    },
                     onAddNewProduct = {
                         navController.navigate(Screen.NewProduct.route)
                     }
                 )
             }
             composable(Screen.NewProduct.route) {
+                NewProductScreen(onNavigateBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.EditProduct.route,
+                arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+            ) {
                 NewProductScreen(onNavigateBack = { navController.popBackStack() })
             }
             composable(

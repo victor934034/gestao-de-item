@@ -10,9 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,7 +86,11 @@ fun InventoryScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(items) { item ->
-                    InventoryItemCard(item = item, onClick = { onItemClick(item.id) })
+                    InventoryItemCard(
+                        item = item,
+                        onClick = { onItemClick(item.id) },
+                        onEdit = { onEditItem(item.id) }
+                    )
                 }
             }
         }
@@ -234,12 +236,36 @@ fun InventoryItemCard(
                     )
                 }
             }
-            Icon(
-                Icons.Default.MoreVert,
-                contentDescription = "Options",
-                tint = Color.Gray,
-                modifier = Modifier.padding(start = 8.dp)
-            )
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Options",
+                        tint = Color.Gray
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Ajustar Estoque") },
+                        leadingIcon = { Icon(Icons.Default.SwapHoriz, contentDescription = null) },
+                        onClick = {
+                            showMenu = false
+                            onClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Editar Produto") },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        onClick = {
+                            showMenu = false
+                            onEdit()
+                        }
+                    )
+                }
+            }
         }
     }
 }

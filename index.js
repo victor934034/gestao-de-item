@@ -44,7 +44,7 @@ app.get('/api/stock/products', async (req, res) => {
         const { data, error } = await supabase
             .from('estoque')
             .select('*')
-            .order('name');
+            .order('nome');
 
         if (error) throw error;
 
@@ -62,12 +62,12 @@ app.get('/api/stock/products', async (req, res) => {
 
 app.patch('/api/stock/products/:id/quantity', async (req, res) => {
     const { id } = req.params;
-    const { quantity } = req.body;
+    const { quantidade } = req.body;
 
     try {
         const { data, error } = await supabase
             .from('estoque')
-            .update({ quantity })
+            .update({ quantidade })
             .eq('id', id)
             .select()
             .single();

@@ -27,6 +27,11 @@ class AnalyticsViewModel @Inject constructor(
                 outOfStockPercent = (outOfStock.toFloat() / total) * 100
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StockHealthData())
+
+    val totalInventoryValue: StateFlow<Double> = itemRepository.getAllItems()
+        .map { items ->
+            items.sumOf { it.currentStock * it.salePrice }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }
 
 data class StockHealthData(

@@ -39,20 +39,20 @@ class ItemRepository @Inject constructor(
                 if (bridgeResponse?.success == true) {
                     bridgeResponse.products?.forEach { bp ->
                         val existing = itemDao.getItemByTinyId(bp.id.toString()) 
-                            ?: itemDao.getItemBySku(bp.id.toString()) // Fallback to SKU if bridge ID is alphanumeric
+                            ?: itemDao.getItemBySku(bp.id.toString()) 
                         
                         val entity = ItemEntity(
                             id = existing?.id ?: 0,
-                            name = bp.name,
+                            name = bp.nome,
                             sku = bp.id.toString(),
                             barcode = "", 
-                            category = bp.category ?: "Geral",
-                            costPrice = 0.0,
-                            salePrice = try { bp.price?.replace("R$", "")?.replace(",", ".")?.toDouble() ?: 0.0 } catch (e: Exception) { 0.0 },
-                            currentStock = bp.quantity,
-                            minStockAlert = bp.minimum_stock,
-                            tinyId = bp.id.toString(), // We'll keep using tinyId field for the remote ID
-                            imageUri = bp.image,
+                            category = bp.modo_estocagem ?: "Geral",
+                            costPrice = bp.custo ?: 0.0,
+                            salePrice = bp.preco_venda ?: 0.0,
+                            currentStock = bp.quantidade.toInt(),
+                            minStockAlert = (existing?.minStockAlert ?: 5),
+                            tinyId = bp.id.toString(), 
+                            imageUri = bp.foto_url,
                             updatedAt = System.currentTimeMillis()
                         )
                         itemDao.insertItem(entity)
@@ -74,7 +74,7 @@ class ItemRepository @Inject constructor(
             val item = itemDao.getItemById(itemId) ?: return@withContext Result.failure(Exception("Item não encontrado"))
             val remoteId = item.tinyId ?: return@withContext Result.failure(Exception("Item não possui ID remoto"))
             
-            val response = bridgeApi.updateQuantity(remoteId, mapOf("quantity" to newQuantity))
+            val response = bridgeApi.updateQuantity(remoteId, mapOf("quantidade" to newQuantity))
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(Unit)
             } else {
@@ -88,15 +88,13 @@ class ItemRepository @Inject constructor(
     suspend fun addRemoteProduct(item: ItemEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val bp = BridgeProduct(
-                id = item.sku, // Bridge will use SKU as ID if not specified, or it will generate one
-                name = item.name,
-                quantity = item.currentStock,
-                minimum_stock = item.minStockAlert,
-                category = item.category,
-                price = item.salePrice.toString(),
-                brand = null,
-                color = null,
-                image = item.imageUri
+                id = item.id,
+                nome = item.name,
+                quantidade = item.currentStock.toDouble(),
+                modo_estocagem = item.category,
+                custo = item.costPrice,
+                preco_venda = item.salePrice,
+                foto_url = item.imageUri
             )
             val response = bridgeApi.addProduct(bp)
             if (response.isSuccessful && response.body()?.success == true) {

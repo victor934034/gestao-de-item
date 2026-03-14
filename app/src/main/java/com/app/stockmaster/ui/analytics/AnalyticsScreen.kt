@@ -28,6 +28,7 @@ fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val stockHealth by viewModel.stockHealth.collectAsState()
+    val totalValue by viewModel.totalInventoryValue.collectAsState()
 
     Scaffold(
         topBar = {
@@ -57,20 +58,15 @@ fun AnalyticsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Total Inventory Value", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
-                            Text("R$ 124.500,00", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                            Text("Valor Total em Estoque", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                            Text(
+                                "R$ ${String.format("%,.2f", totalValue)}",
+                                color = Color.White,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Icon(Icons.Default.TrendingUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(40.dp))
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                            Text("12% vs last month", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
                     }
                 }
             }

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import coil.compose.AsyncImage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,12 +35,12 @@ fun NewProductScreen(
     val salePrice by viewModel.salePrice.collectAsState()
     val initialStock by viewModel.initialStock.collectAsState()
     val minStock by viewModel.minStock.collectAsState()
-    val profitMargin by viewModel.profitMargin.collectAsState()
+    val isEditMode = viewModel.isEditMode
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Novo Produto", fontWeight = FontWeight.Bold) },
+                title = { Text(if (isEditMode) "Editar Produto" else "Novo Produto", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.Close, contentDescription = "Cancelar")
@@ -68,7 +69,13 @@ fun NewProductScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Product Image Card
+            // ... (rest of the card and text fields)
+            // No changes needed inside the Column except the final button
+
+            // (Skipping ahead to the final button at the end)
+        }
+    }
+}
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -81,13 +88,31 @@ fun NewProductScreen(
                         .background(Color(0xFFF5F7FA)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Clique para adicionar foto", color = Color.Gray, fontSize = 12.sp)
+                    if (imageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Insira uma URL de imagem abaixo", color = Color.Gray, fontSize = 12.sp)
+                        }
                     }
                 }
             }
+
+            OutlinedTextField(
+                value = imageUrl,
+                onValueChange = { viewModel.updateImageUrl(it) },
+                label = { Text("URL da Foto") },
+                placeholder = { Text("https://exemplo.com/foto.jpg") },
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = { Icon(Icons.Default.Link, contentDescription = null) },
+                shape = RoundedCornerShape(12.dp)
+            )
 
             // General Information
             SectionTitle("Informações Gerais")
@@ -176,7 +201,7 @@ fun NewProductScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Salvar Novo Produto", fontWeight = FontWeight.Bold)
+                Text(if (isEditMode) "Salvar Alterações" else "Salvar Novo Produto", fontWeight = FontWeight.Bold)
             }
 
             TextButton(
