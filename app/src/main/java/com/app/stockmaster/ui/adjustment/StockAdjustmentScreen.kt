@@ -85,7 +85,13 @@ fun StockAdjustmentScreen(
                                 model = currentItem.imageUri ?: "https://via.placeholder.com/150",
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                contentScale = ContentScale.Crop,
+                                onSuccess = {
+                                    android.util.Log.d("Coil", "Image loaded successfully for: ${currentItem.name}")
+                                },
+                                onError = { error ->
+                                    android.util.Log.e("Coil", "Error loading image for ${currentItem.name}: ${error.result.throwable.message}")
+                                }
                             )
                         }
                         Spacer(modifier = Modifier.width(16.dp))

@@ -149,13 +149,15 @@ class ItemRepository @Inject constructor(
                         else -> rawId.toString()
                     }
 
+                    // Matching strategy: 1. By remoteId (tinyId), 2. By Barcode, 3. By SKU
                     val existing = itemDao.getItemByTinyId(remoteIdStr) 
+                        ?: (if (!bp.barcode.isNullOrBlank()) itemDao.getItemByBarcode(bp.barcode) else null)
                         ?: itemDao.getItemBySku(remoteIdStr) 
                     
                     val entity = ItemEntity(
                         id = existing?.id ?: 0,
                         name = bp.nome,
-                        sku = remoteIdStr,
+                        sku = existing?.sku ?: remoteIdStr, // Preserve local SKU if exists
                         barcode = bp.barcode ?: existing?.barcode ?: "", 
                         category = bp.modo_estocagem ?: "Geral",
                         costPrice = bp.custo ?: 0.0,
@@ -163,7 +165,7 @@ class ItemRepository @Inject constructor(
                         currentStock = bp.quantidade.toInt(),
                         minStockAlert = (existing?.minStockAlert ?: 5),
                         tinyId = remoteIdStr, 
-                        imageUri = bp.foto_url,
+                        imageUri = if (!bp.foto_url.isNullOrBlank()) bp.foto_url else existing?.imageUri,
                         updatedAt = System.currentTimeMillis()
                     )
                     itemDao.insertItem(entity)

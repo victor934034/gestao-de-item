@@ -288,7 +288,13 @@ fun InventoryItemCard(
                         model = item.imageUri ?: "https://via.placeholder.com/150",
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
+                        onSuccess = {
+                            android.util.Log.d("Coil", "Inventory - Loaded image for: ${item.name}")
+                        },
+                        onError = { error ->
+                            android.util.Log.e("Coil", "Inventory - Error for ${item.name}: ${error.result.throwable.message}")
+                        }
                     )
                 }
 
