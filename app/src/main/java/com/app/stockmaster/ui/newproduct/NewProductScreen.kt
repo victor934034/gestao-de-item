@@ -304,16 +304,16 @@ fun NewProductScreen(
                     }
 
                     Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = if (profitMargin >= 30.0) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.secondaryContainer,
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             "Margem de lucro estimada: ${String.format("%.1f", profitMargin)}%",
                             modifier = Modifier.padding(12.dp),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            color = if (profitMargin >= 30.0) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSecondaryContainer,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Black
                         )
                     }
 

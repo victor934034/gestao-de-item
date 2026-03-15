@@ -70,6 +70,9 @@ fun InventoryScreen(
                             }
                         },
                         actions = {
+                            IconButton(onClick = { viewModel.syncWithBridge() }) {
+                                Icon(Icons.Default.Sync, contentDescription = "Sincronizar", tint = MaterialTheme.colorScheme.primary)
+                            }
                             IconButton(onClick = { viewModel.toggleLowStockOnly(true) }) {
                                 BadgedBox(badge = { if (lowStockCount > 0) Badge { Text(lowStockCount.toString()) } }) {
                                     Icon(Icons.Default.Notifications, contentDescription = "Notifications")
