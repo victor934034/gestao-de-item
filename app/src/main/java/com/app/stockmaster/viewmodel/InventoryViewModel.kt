@@ -9,6 +9,7 @@ import com.app.stockmaster.data.repository.CategoryRepository
 import com.app.stockmaster.data.repository.ItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -60,6 +61,12 @@ class InventoryViewModel @Inject constructor(
 
     fun selectCategory(category: String?) {
         _selectedCategory.value = category
+    }
+
+    fun syncWithBridge() {
+        viewModelScope.launch {
+            itemRepository.syncWithBridge()
+        }
     }
 
     suspend fun findItemByBarcode(barcode: String): ItemEntity? {
