@@ -79,20 +79,31 @@ fun StockAdjustmentScreen(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
                         ) {
-                            AsyncImage(
-                                model = com.app.stockmaster.util.ImageUtils.decodeBase64(currentItem.imageUri) ?: "https://via.placeholder.com/150",
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                onSuccess = {
-                                    android.util.Log.d("Coil", "Image loaded successfully for: ${currentItem.name}")
-                                },
-                                onError = { error ->
-                                    android.util.Log.e("Coil", "Error loading image for ${currentItem.name}: ${error.result.throwable.message}")
-                                }
-                            )
+                            val decodedImage = com.app.stockmaster.util.ImageUtils.decodeBase64(currentItem.imageUri)
+                            if (decodedImage != null) {
+                                AsyncImage(
+                                    model = decodedImage,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                    onSuccess = {
+                                        android.util.Log.d("Coil", "Image loaded successfully for: ${currentItem.name}")
+                                    },
+                                    onError = { error ->
+                                        android.util.Log.e("Coil", "Error loading image for ${currentItem.name}: ${error.result.throwable.message}")
+                                    }
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
