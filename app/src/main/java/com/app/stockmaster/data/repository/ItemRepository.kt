@@ -12,6 +12,10 @@ import com.app.stockmaster.data.remote.BridgeProductResponse
 import com.google.gson.Gson
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import java.io.ByteArrayOutputStream
 
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
@@ -28,6 +32,49 @@ class ItemRepository @Inject constructor(
     private val bridgeApi: com.app.stockmaster.data.remote.BridgeApi,
     @ApplicationContext private val context: Context
 ) {
+    suspend fun uriToBase64(uri: android.net.Uri): String? = withContext(Dispatchers.IO) {
+        try {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            if (originalBitmap == null) return@withContext null
+
+            // Resize if too large (max 800px width or height)
+            val maxDimension = 800
+            val width = originalBitmap.width
+            val height = originalBitmap.height
+            
+            val resizedBitmap = if (width > maxDimension || height > maxDimension) {
+                val ratio = width.toFloat() / height.toFloat()
+                var newWidth = maxDimension
+                var newHeight = maxDimension
+                if (ratio > 1) {
+                    newHeight = (maxDimension / ratio).toInt()
+                } else {
+                    newWidth = (maxDimension * ratio).toInt()
+                }
+                Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+            } else {
+                originalBitmap
+            }
+
+            val outputStream = ByteArrayOutputStream()
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+            val byteArray = outputStream.toByteArray()
+            
+            // Cleanup bitmaps
+            if (resizedBitmap != originalBitmap) resizedBitmap.recycle()
+            originalBitmap.recycle()
+
+            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        } catch (e: Exception) {
+            android.util.Log.e("ItemRepo", "Error converting uri to base64", e)
+            null
+        }
+    }
+
     suspend fun uploadImage(uri: android.net.Uri): String? = withContext(Dispatchers.IO) {
         try {
             val contentResolver = context.contentResolver

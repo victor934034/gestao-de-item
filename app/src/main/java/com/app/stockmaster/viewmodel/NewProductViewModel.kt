@@ -114,16 +114,16 @@ class NewProductViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Upload image if it's a local URI
+                // Convert image to Base64 if it's a local URI
                 var finalImageUrl = _imageUrl.value.ifBlank { null }
                 if (finalImageUrl != null && finalImageUrl.startsWith("content://")) {
-                    android.util.Log.d("NewProductVM", "Local URI detected, uploading: $finalImageUrl")
-                    val cloudUrl = itemRepository.uploadImage(android.net.Uri.parse(finalImageUrl))
-                    if (cloudUrl != null) {
-                        finalImageUrl = cloudUrl
-                        _imageUrl.value = cloudUrl // Update UI state too
+                    android.util.Log.d("NewProductVM", "Local URI detected, converting to Base64: $finalImageUrl")
+                    val base64Data = itemRepository.uriToBase64(android.net.Uri.parse(finalImageUrl))
+                    if (base64Data != null) {
+                        finalImageUrl = base64Data
+                        _imageUrl.value = base64Data // Update UI state too
                     } else {
-                        Log.e("NewProductVM", "Image upload failed, falling back to local URI")
+                        Log.e("NewProductVM", "Base64 conversion failed, falling back to local URI")
                     }
                 }
 
