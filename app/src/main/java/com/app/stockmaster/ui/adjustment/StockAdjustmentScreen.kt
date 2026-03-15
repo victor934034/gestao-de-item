@@ -82,7 +82,7 @@ fun StockAdjustmentScreen(
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             AsyncImage(
-                                model = currentItem.imageUri ?: "https://via.placeholder.com/150",
+                                model = com.app.stockmaster.util.ImageUtils.decodeBase64(currentItem.imageUri) ?: "https://via.placeholder.com/150",
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
