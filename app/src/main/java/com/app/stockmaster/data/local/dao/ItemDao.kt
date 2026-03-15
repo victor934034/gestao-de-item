@@ -39,6 +39,12 @@ interface ItemDao {
     @Query("SELECT * FROM items WHERE sku = :sku LIMIT 1")
     suspend fun getItemBySku(sku: String): ItemEntity?
 
+    @Query("SELECT * FROM items WHERE barcode = :barcode LIMIT 1")
+    suspend fun getItemByBarcode(barcode: String): ItemEntity?
+
     @Query("SELECT * FROM items WHERE id = :id LIMIT 1")
     suspend fun getItemById(id: Int): ItemEntity?
+
+    @Query("SELECT * FROM items WHERE tinyId IS NULL AND isActive = 1")
+    suspend fun getUnsyncedItems(): List<ItemEntity>
 }

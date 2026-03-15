@@ -18,20 +18,44 @@ import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
-    secondary = Accent,
-    tertiary = Warning,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryDark,
+    onPrimaryContainer = Color.White,
+    secondary = Secondary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFF233A27),
+    onSecondaryContainer = Color(0xFFB9F6CA),
+    background = BackgroundDark,
+    onBackground = TextPrimaryDark,
+    surface = SurfaceDark,
+    onSurface = TextPrimaryDark,
+    surfaceVariant = Color(0xFF2D3142),
+    onSurfaceVariant = TextSecondaryDark,
     error = Alert,
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E),
+    onError = Color.White,
+    errorContainer = Color(0xFF8C1D18),
+    onErrorContainer = Color(0xFFF9DEDC)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Primary,
-    secondary = Accent,
-    tertiary = Warning,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+    secondary = Secondary,
+    onSecondary = Color.White,
+    secondaryContainer = SecondaryContainer,
+    onSecondaryContainer = OnSecondaryContainer,
+    background = BackgroundLight,
+    onBackground = TextPrimaryLight,
+    surface = SurfaceLight,
+    onSurface = TextPrimaryLight,
+    surfaceVariant = Color(0xFFF1F4F9),
+    onSurfaceVariant = TextSecondaryLight,
     error = Alert,
-    background = Background,
-    surface = Surface,
+    onError = Color.White,
+    errorContainer = Color(0xFFF9DEDC),
+    onErrorContainer = Color(0xFF410002)
 )
 
 @Composable

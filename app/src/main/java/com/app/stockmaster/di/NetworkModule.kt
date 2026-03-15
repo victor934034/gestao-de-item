@@ -20,13 +20,17 @@ import javax.inject.Named
 object NetworkModule {
 
     private const val TINY_BASE_URL = "https://api.tiny.com.br/api2/"
-    private const val BRIDGE_BASE_URL = "http://76.13.161.164:3000/"
-    private const val API_TOKEN = "fdaefe9956da9074686debb15db59aea775b89b04ea74cffc5e269dd2df3ed5b"
+    // Unified Backend URL (Entrega + Gestão)
+    private const val BRIDGE_BASE_URL = "https://app-backend.zdc13k.easypanel.host/api/stock/"
+    private const val TINY_API_TOKEN = "fdaefe9956da9074686debb15db59aea775b89b04ea74cffc5e269dd2df3ed5b"
+    
+    // Supabase Credentials
+    private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZ21pdHJ5Ymhtd3dpaHpub3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMTMwNjcsImV4cCI6MjA4NDc4OTA2N30.hCu-znNbVmvuGujepYkKMuDHX28pC69YzZ3-zYMHU7c"
 
     @Provides
     @Singleton
     fun provideAuthInterceptor(): AuthInterceptor {
-        return AuthInterceptor(API_TOKEN)
+        return AuthInterceptor(TINY_API_TOKEN)
     }
 
     @Provides
@@ -44,6 +48,20 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("SupabaseHttpClient")
+    fun provideSupabaseHttpClient(): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        
+        // Unified backend doesn't need Supabase headers, it handles it internally
+        return OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    @Provides
+    @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(TINY_BASE_URL)
@@ -55,9 +73,10 @@ object NetworkModule {
     @Provides
     @Singleton
     @Named("BridgeRetrofit")
-    fun provideBridgeRetrofit(): Retrofit {
+    fun provideBridgeRetrofit(@Named("SupabaseHttpClient") supabaseHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BRIDGE_BASE_URL)
+            .client(supabaseHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

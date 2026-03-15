@@ -7,13 +7,14 @@ data class BridgeProductResponse(
 )
 
 data class BridgeProduct(
-    val id: Any, // Can be String or Int depending on Supabase config
+    val id: Any, // Received as number/string from Supabase
     val nome: String,
     val quantidade: Double,
     val modo_estocagem: String? = null,
     val custo: Double? = null,
     val preco_venda: Double? = null,
-    val foto_url: String? = null
+    val foto_url: String? = null,
+    val barcode: String? = null
 )
 
 data class BridgeUpdateResponse(

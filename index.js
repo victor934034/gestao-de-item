@@ -1,10 +1,20 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Configure Multer for memory storage
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
 
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -61,8 +71,12 @@ app.get('/api/stock/products', async (req, res) => {
 });
 
 app.patch('/api/stock/products/:id/quantity', async (req, res) => {
-    const { id } = req.params;
+    let { id } = req.params;
+    // Clean ID: "14.0" -> "14"
+    if (id && id.includes('.')) id = id.split('.')[0];
+
     const { quantidade } = req.body;
+    console.log(`[BRIDGE] PATCH quantity for ID: ${id}, New Quantity: ${quantidade}`);
 
     try {
         const { data, error } = await supabase
@@ -72,8 +86,12 @@ app.patch('/api/stock/products/:id/quantity', async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error(`[BRIDGE] PATCH Error: ${error.message}`);
+            throw error;
+        }
 
+        console.log(`[BRIDGE] PATCH Success for ID: ${id}`);
         res.json({
             success: true,
             product: data
@@ -81,13 +99,15 @@ app.patch('/api/stock/products/:id/quantity', async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message,
+            details: error
         });
     }
 });
 
 app.post('/api/stock/products', async (req, res) => {
     const product = req.body;
+    console.log(`[BRIDGE] POST new product: ${product.nome}`);
     // Remove ID if provided to let Supabase generate it
     delete product.id;
 
@@ -98,8 +118,12 @@ app.post('/api/stock/products', async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error(`[BRIDGE] POST Error: ${error.message}`);
+            throw error;
+        }
 
+        console.log(`[BRIDGE] POST Success, New ID: ${data.id}`);
         res.json({
             success: true,
             product: data
@@ -107,14 +131,19 @@ app.post('/api/stock/products', async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message,
+            details: error
         });
     }
 });
 
 app.put('/api/stock/products/:id', async (req, res) => {
-    const { id } = req.params;
+    let { id } = req.params;
+    // Clean ID: "14.0" -> "14"
+    if (id && id.includes('.')) id = id.split('.')[0];
+
     const product = req.body;
+    console.log(`[BRIDGE] PUT update product ID: ${id}`);
     delete product.id; // Ensure we don't try to update the ID
 
     try {
@@ -125,8 +154,12 @@ app.put('/api/stock/products/:id', async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error(`[BRIDGE] PUT Error: ${error.message}`);
+            throw error;
+        }
 
+        console.log(`[BRIDGE] PUT Success for ID: ${id}`);
         res.json({
             success: true,
             product: data
@@ -134,7 +167,8 @@ app.put('/api/stock/products/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message,
+            details: error
         });
     }
 });
@@ -154,6 +188,45 @@ app.delete('/api/stock/products/:id', async (req, res) => {
             success: true
         });
     } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// New Upload Endpoint
+app.post('/api/stock/upload', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded' });
+        }
+
+        const file = req.file;
+        const fileExt = path.extname(file.originalname);
+        const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { data, error } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(filePath);
+
+        res.json({
+            success: true,
+            imageUrl: publicUrl
+        });
+    } catch (error) {
+        console.error('[BRIDGE] Upload Error:', error);
         res.status(500).json({
             success: false,
             error: error.message

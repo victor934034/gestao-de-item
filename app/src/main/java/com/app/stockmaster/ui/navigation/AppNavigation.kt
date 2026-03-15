@@ -17,9 +17,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.app.stockmaster.ui.dashboard.DashboardScreen
-import com.app.stockmaster.ui.inventory.InventoryScreen
-
 import com.app.stockmaster.ui.adjustment.StockAdjustmentScreen
 import com.app.stockmaster.ui.dashboard.DashboardScreen
 import com.app.stockmaster.ui.inventory.InventoryScreen
@@ -27,6 +24,12 @@ import com.app.stockmaster.ui.newproduct.NewProductScreen
 
 import com.app.stockmaster.ui.analytics.AnalyticsScreen
 import com.app.stockmaster.ui.settings.SettingsScreen
+import com.app.stockmaster.ui.scanner.BarcodeScannerScreen
+import com.app.stockmaster.viewmodel.InventoryViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.flow.firstOrNull
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -40,8 +43,15 @@ fun AppNavigation(navController: NavHostController) {
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Dashboard.route) { DashboardScreen() }
-            composable(Screen.Inventory.route) {
+            composable(Screen.Dashboard.route) { DashboardScreen(navController = navController) }
+            composable(
+                route = Screen.Inventory.routeDefinition,
+                arguments = listOf(navArgument("filter") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                })
+            ) {
                 InventoryScreen(
                     onItemClick = { itemId ->
                         navController.navigate(Screen.StockAdjustment.createRoute(itemId))
@@ -51,17 +61,27 @@ fun AppNavigation(navController: NavHostController) {
                     },
                     onAddNewProduct = {
                         navController.navigate(Screen.NewProduct.route)
-                    }
+                    },
+                    onScanClick = {
+                        navController.navigate(Screen.Scanner.route)
+                    },
+                    navController = navController
                 )
             }
             composable(Screen.NewProduct.route) {
-                NewProductScreen(onNavigateBack = { navController.popBackStack() })
+                NewProductScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    navController = navController
+                )
             }
             composable(
                 route = Screen.EditProduct.route,
                 arguments = listOf(navArgument("itemId") { type = NavType.IntType })
             ) {
-                NewProductScreen(onNavigateBack = { navController.popBackStack() })
+                NewProductScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    navController = navController
+                )
             }
             composable(
                 route = Screen.StockAdjustment.route,
@@ -71,6 +91,32 @@ fun AppNavigation(navController: NavHostController) {
             }
             composable(Screen.Analytics.route) { AnalyticsScreen() }
             composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Scanner.route) {
+                val inventoryViewModel: InventoryViewModel = hiltViewModel()
+                val scope = rememberCoroutineScope()
+                BarcodeScannerScreen(
+                    onBarcodeScanned = { barcode ->
+                        val previousRoute = navController.previousBackStackEntry?.destination?.route
+                        if (previousRoute == Screen.NewProduct.route || previousRoute?.startsWith("edit_product") == true) {
+                            navController.previousBackStackEntry?.savedStateHandle?.set("scan_result", barcode)
+                            navController.popBackStack()
+                        } else {
+                            scope.launch {
+                                val item = inventoryViewModel.findItemByBarcode(barcode)
+                                if (item != null) {
+                                    navController.navigate(Screen.StockAdjustment.createRoute(item.id)) {
+                                        popUpTo(Screen.Inventory.route)
+                                    }
+                                } else {
+                                    navController.previousBackStackEntry?.savedStateHandle?.set("scan_error", "O item com código $barcode não foi encontrado.")
+                                    navController.popBackStack()
+                                }
+                            }
+                        }
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -98,7 +144,9 @@ fun BottomNavigationBar(navController: NavHostController) {
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.name) },
                 label = { Text(item.name) },
-                selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                selected = currentDestination?.hierarchy?.any { 
+                    it.route?.split("?")?.firstOrNull() == item.route 
+                } == true,
                 onClick = {
                     navController.navigate(item.route) {
                         popUpTo(navController.graph.findStartDestination().id) {

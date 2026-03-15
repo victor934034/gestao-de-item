@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.app.stockmaster.viewmodel.StockAdjustmentViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,15 +41,22 @@ fun StockAdjustmentScreen(
     val reasons = listOf("Compra / Recebimento", "Venda / Saída", "Devolução", "Avaria / Perda", "Inventário", "Outros")
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text("Ajuste de Estoque", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
-                    }
-                }
-            )
+            Surface(
+                shadowElevation = 4.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                TopAppBar(
+                    title = { Text("Ajuste de Estoque", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onSurface)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                )
+            }
         }
     ) { paddingValues ->
         item?.let { currentItem ->
@@ -55,129 +65,164 @@ fun StockAdjustmentScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Product Header Card
-                ElevatedCard(
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 2.dp
                 ) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = currentItem.imageUri ?: "https://via.placeholder.com/80",
-                            contentDescription = null,
+                        Box(
                             modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(currentItem.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text("${currentItem.currentStock} unidades • SKU: ${currentItem.sku}", color = Color.Gray)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Surface(
-                                color = Color(0xFFE8F5E9),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    "EM ESTOQUE",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    color = Color(0xFF4CAF50),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                                .size(72.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            AsyncImage(
+                                model = currentItem.imageUri ?: "https://via.placeholder.com/150",
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
                         }
-                    }
-                }
-
-                // Toggle Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    AdjustmentTypeButton(
-                        modifier = Modifier.weight(1f),
-                        text = "ENTRADA",
-                        icon = Icons.Default.AddCircle,
-                        selected = isAddition,
-                        selectedColor = MaterialTheme.colorScheme.primary,
-                        onClick = { viewModel.setType(true) }
-                    )
-                    AdjustmentTypeButton(
-                        modifier = Modifier.weight(1f),
-                        text = "SAÍDA",
-                        icon = Icons.Default.RemoveCircle,
-                        selected = !isAddition,
-                        selectedColor = Color.LightGray,
-                        onClick = { viewModel.setType(false) }
-                    )
-                }
-
-                Text("Detalhes da Transação", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { viewModel.updateQuantity(it) },
-                    label = { Text("Quantidade") },
-                    suffix = { Text("unidades") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Box {
-                    OutlinedTextField(
-                        value = reason,
-                        onValueChange = {},
-                        label = { Text("Motivo do Ajuste") },
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { expanded = true }) {
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    ) {
-                        reasons.forEach { r ->
-                            DropdownMenuItem(
-                                text = { Text(r) },
-                                onClick = {
-                                    viewModel.updateReason(r)
-                                    expanded = false
-                                }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                currentItem.name, 
+                                fontWeight = FontWeight.Bold, 
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Atual: ${currentItem.currentStock} unid. • SKU: ${currentItem.sku}", 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
                             )
                         }
                     }
                 }
 
-                OutlinedTextField(
-                    value = "", // TODO: Date implementation
-                    onValueChange = {},
-                    label = { Text("Data da Transação") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
-                    shape = RoundedCornerShape(12.dp),
-                    readOnly = true
-                )
-
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    label = { Text("Observação (Opcional)") },
+                // Toggle Buttons - Premium Segmented Control style
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(64.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        AdjustmentTypeButton(
+                            modifier = Modifier.weight(1f),
+                            text = "ENTRADA",
+                            icon = Icons.Default.Add,
+                            selected = isAddition,
+                            selectedColor = Color(0xFF43A047),
+                            onClick = { viewModel.setType(true) }
+                        )
+                        AdjustmentTypeButton(
+                            modifier = Modifier.weight(1f),
+                            text = "SAÍDA",
+                            icon = Icons.Default.Remove,
+                            selected = !isAddition,
+                            selectedColor = Color(0xFFE53935),
+                            onClick = { viewModel.setType(false) }
+                        )
+                    }
+                }
+
+                Text(
+                    "Informações do Ajuste", 
+                    fontWeight = FontWeight.ExtraBold, 
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = quantity,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) viewModel.updateQuantity(it) },
+                        label = { Text("Quantidade", fontWeight = FontWeight.Medium) },
+                        suffix = { Text("unidades", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+
+                    Box {
+                        OutlinedTextField(
+                            value = reason,
+                            onValueChange = {},
+                            label = { Text("Motivo do Ajuste", fontWeight = FontWeight.Medium) },
+                            modifier = Modifier.fillMaxWidth(),
+                            readOnly = true,
+                            trailingIcon = {
+                                IconButton(onClick = { expanded = true }) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f).background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            reasons.forEach { r ->
+                                DropdownMenuItem(
+                                    text = { Text(r, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface) },
+                                    onClick = {
+                                        viewModel.updateReason(r)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()),
+                        onValueChange = {},
+                        label = { Text("Data", fontWeight = FontWeight.Medium) },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        shape = RoundedCornerShape(12.dp),
+                        readOnly = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -186,9 +231,12 @@ fun StockAdjustmentScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Text("Confirmar Transação", fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Confirmar Alteração", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -204,31 +252,30 @@ fun AdjustmentTypeButton(
     selectedColor: Color,
     onClick: () -> Unit
 ) {
-    ElevatedCard(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = if (selected) selectedColor else Color(0xFFF5F7FA)
-        )
+    Surface(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) selectedColor else Color.Transparent
     ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (selected) Color.White else Color.Gray,
-                modifier = Modifier.size(32.dp)
+                tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text,
-                color = if (selected) Color.White else Color.Gray,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 13.sp
             )
         }
     }

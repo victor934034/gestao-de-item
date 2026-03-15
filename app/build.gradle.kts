@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.app.stockmaster"
-    compileSdk = 35
-
+    compileSdk = 34
+    
     defaultConfig {
         applicationId = "com.app.stockmaster"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -88,11 +88,22 @@ dependencies {
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.opencsv)
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    
     // Network
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

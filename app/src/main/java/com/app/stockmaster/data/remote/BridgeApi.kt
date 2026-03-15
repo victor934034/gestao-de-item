@@ -3,32 +3,43 @@ package com.app.stockmaster.data.remote
 import retrofit2.Response
 import retrofit2.http.*
 
+data class BridgeResponse<T>(
+    val success: Boolean,
+    val products: T? = null,
+    val product: T? = null,
+    val error: String? = null
+)
+
 interface BridgeApi {
-    @GET("api/stock/products")
-    suspend fun getProducts(): Response<BridgeProductResponse>
+    @GET("status")
+    suspend fun getStatus(): Response<Map<String, Any>>
 
-    @GET("api/stock/status")
-    suspend fun getStatus(): Response<BridgeStatusResponse>
+    @GET("products")
+    suspend fun getProducts(): Response<BridgeResponse<List<BridgeProduct>>>
 
-    @PATCH("api/stock/products/{id}/quantity")
+    @PATCH("products/{id}/quantity")
     suspend fun updateQuantity(
         @Path("id") id: String,
         @Body body: Map<String, Int>
-    ): Response<BridgeUpdateResponse>
+    ): Response<BridgeResponse<BridgeProduct>>
 
-    @PUT("api/stock/products/{id}")
+    @PUT("products/{id}")
     suspend fun updateProduct(
         @Path("id") id: String,
         @Body product: BridgeProduct
-    ): Response<BridgeUpdateResponse>
+    ): Response<BridgeResponse<BridgeProduct>>
 
-    @POST("api/stock/products")
+    @POST("products")
     suspend fun addProduct(
         @Body product: BridgeProduct
-    ): Response<BridgeUpdateResponse>
+    ): Response<BridgeResponse<BridgeProduct>>
 
-    @DELETE("api/stock/products/{id}")
+    @DELETE("products/{id}")
     suspend fun deleteProduct(
         @Path("id") id: String
-    ): Response<BridgeProductResponse>
+    ): Response<BridgeResponse<Unit>>
+
+    @Multipart
+    @POST("upload")
+    suspend fun uploadImage(@Part image: okhttp3.MultipartBody.Part): Response<Map<String, Any>>
 }

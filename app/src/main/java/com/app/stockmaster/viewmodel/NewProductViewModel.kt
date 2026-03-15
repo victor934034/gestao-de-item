@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import android.util.Log
+
 @HiltViewModel
 class NewProductViewModel @Inject constructor(
     private val itemRepository: ItemRepository,
@@ -25,6 +27,9 @@ class NewProductViewModel @Inject constructor(
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
+    private val _barcode = MutableStateFlow("")
+    val barcode: StateFlow<String> = _barcode.asStateFlow()
+
     init {
         itemId?.let { id ->
             viewModelScope.launch {
@@ -37,6 +42,7 @@ class NewProductViewModel @Inject constructor(
                     _initialStock.value = item.currentStock.toString()
                     _minStock.value = item.minStockAlert.toString()
                     _imageUrl.value = item.imageUri ?: ""
+                    _barcode.value = item.barcode
                 }
             }
         }
@@ -79,37 +85,89 @@ class NewProductViewModel @Inject constructor(
     fun updateSalePrice(value: String) { _salePrice.value = value }
     fun updateInitialStock(value: String) { _initialStock.value = value }
     fun updateMinStock(value: String) { _minStock.value = value }
+    fun updateBarcode(value: String) { _barcode.value = value }
     fun updateImageUrl(value: String) { _imageUrl.value = value }
 
+    fun generateBarcode() {
+        _barcode.value = com.app.stockmaster.util.Ean13Generator.generate()
+    }
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
     fun saveProduct(onSuccess: () -> Unit) {
-        if (_name.value.isEmpty() || _sku.value.isEmpty()) return
+        if (_name.value.isEmpty() || _sku.value.isEmpty()) {
+            _error.value = "Nome e SKU são obrigatórios"
+            return
+        }
+
+        // Ensure we have a barcode. If blank, generate a valid EAN-13
+        if (_barcode.value.isBlank()) {
+            generateBarcode()
+        }
+
+        _isSaving.value = true
+        _error.value = null
 
         viewModelScope.launch {
-            val item = ItemEntity(
-                name = _name.value,
-                sku = _sku.value,
-                barcode = _sku.value, 
-                category = _category.value,
-                costPrice = _costPrice.value.toDoubleOrNull() ?: 0.0,
-                salePrice = _salePrice.value.toDoubleOrNull() ?: 0.0,
-                currentStock = _initialStock.value.toIntOrNull() ?: 0,
-                minStockAlert = _minStock.value.toIntOrNull() ?: 5,
-                imageUri = _imageUrl.value.ifBlank { null },
-                tinyId = itemId?.let { id -> itemRepository.getItemById(id)?.tinyId }
-            )
-
-            if (isEditMode) {
-                val updatedItem = item.copy(id = itemId!!, updatedAt = System.currentTimeMillis())
-                itemRepository.updateItem(updatedItem)
-                // Also update remotely if it has a tinyId
-                updatedItem.tinyId?.let { remoteId ->
-                    itemRepository.updateRemoteProduct(updatedItem)
+            try {
+                // Upload image if it's a local URI
+                var finalImageUrl = _imageUrl.value.ifBlank { null }
+                if (finalImageUrl != null && finalImageUrl.startsWith("content://")) {
+                    android.util.Log.d("NewProductVM", "Local URI detected, uploading: $finalImageUrl")
+                    val cloudUrl = itemRepository.uploadImage(android.net.Uri.parse(finalImageUrl))
+                    if (cloudUrl != null) {
+                        finalImageUrl = cloudUrl
+                        _imageUrl.value = cloudUrl // Update UI state too
+                    } else {
+                        Log.e("NewProductVM", "Image upload failed, falling back to local URI")
+                    }
                 }
-            } else {
-                val localId = itemRepository.insertItem(item)
-                itemRepository.addRemoteProduct(item.copy(id = localId.toInt()))
+
+                val item = ItemEntity(
+                    name = _name.value,
+                    sku = _sku.value,
+                    barcode = _barcode.value, 
+                    category = _category.value,
+                    costPrice = _costPrice.value.toDoubleOrNull() ?: 0.0,
+                    salePrice = _salePrice.value.toDoubleOrNull() ?: 0.0,
+                    currentStock = _initialStock.value.toIntOrNull() ?: 0,
+                    minStockAlert = _minStock.value.toIntOrNull() ?: 5,
+                    imageUri = finalImageUrl,
+                    tinyId = itemId?.let { id -> itemRepository.getItemById(id)?.tinyId },
+                    updatedAt = System.currentTimeMillis()
+                )
+
+                if (isEditMode) {
+                    val updatedItem = item.copy(id = itemId!!, updatedAt = System.currentTimeMillis())
+                    itemRepository.updateItem(updatedItem)
+                    // Also update remotely if it has a tinyId
+                    updatedItem.tinyId?.let { remoteId ->
+                        Log.d("NewProductVM", "Attempting remote update for $remoteId")
+                        val result = itemRepository.updateRemoteProduct(updatedItem)
+                        result.onFailure { e ->
+                            Log.e("NewProductVM", "Remote update failed", e)
+                            // We don't block success of local save, but we log it
+                        }
+                    }
+                } else {
+                    val localId = itemRepository.insertItem(item)
+                    Log.d("NewProductVM", "Attempting to add remote product for local ID: $localId")
+                    val result = itemRepository.addRemoteProduct(item.copy(id = localId.toInt()))
+                    result.onFailure { e ->
+                        Log.e("NewProductVM", "Remote add failed", e)
+                    }
+                }
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("NewProductVM", "General save error", e)
+                _error.value = "Erro ao salvar: ${e.message}"
+            } finally {
+                _isSaving.value = false
             }
-            onSuccess()
         }
     }
 }

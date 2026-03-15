@@ -25,6 +25,8 @@ class DashboardViewModel @Inject constructor(
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+
+
     private val startOfDay: Long = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
@@ -48,10 +50,21 @@ class DashboardViewModel @Inject constructor(
     private val _syncing = MutableStateFlow(false)
     val syncing: StateFlow<Boolean> = _syncing.asStateFlow()
 
+    private val _syncError = MutableStateFlow<String?>(null)
+    val syncError: StateFlow<String?> = _syncError.asStateFlow()
+
+    init {
+        triggerSync()
+    }
+
     fun triggerSync() {
         viewModelScope.launch {
             _syncing.value = true
+            _syncError.value = null
             itemRepository.syncWithBridge()
+                .onFailure { e ->
+                    _syncError.value = e.message
+                }
             _syncing.value = false
         }
     }

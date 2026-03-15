@@ -1,5 +1,6 @@
 package com.app.stockmaster.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.stockmaster.data.local.entity.CategoryEntity
@@ -13,8 +14,13 @@ import javax.inject.Inject
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
     private val itemRepository: ItemRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val filter: String? = savedStateHandle["filter"]
+    private val _showLowStockOnly = MutableStateFlow(filter == "low_stock")
+    val showLowStockOnly = _showLowStockOnly.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -28,15 +34,25 @@ class InventoryViewModel @Inject constructor(
     val items: StateFlow<List<ItemEntity>> = combine(
         _searchQuery,
         _selectedCategory,
+        _showLowStockOnly,
         itemRepository.getAllItems()
-    ) { query, category, allItems ->
+    ) { query, category, lowStockOnly, allItems ->
         allItems.filter { item ->
             val matchesQuery = item.name.contains(query, ignoreCase = true) || 
                                item.sku.contains(query, ignoreCase = true)
             val matchesCategory = category == null || item.category == category
-            matchesQuery && matchesCategory
+            val matchesLowStock = !lowStockOnly || item.currentStock <= item.minStockAlert
+            matchesQuery && matchesCategory && matchesLowStock
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun toggleLowStockOnly(value: Boolean) {
+        _showLowStockOnly.value = value
+    }
+
+    val lowStockCount: StateFlow<Int> = itemRepository.getAllItems()
+        .map { items -> items.count { it.currentStock <= it.minStockAlert } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
@@ -44,5 +60,9 @@ class InventoryViewModel @Inject constructor(
 
     fun selectCategory(category: String?) {
         _selectedCategory.value = category
+    }
+
+    suspend fun findItemByBarcode(barcode: String): ItemEntity? {
+        return itemRepository.getItemByBarcode(barcode)
     }
 }

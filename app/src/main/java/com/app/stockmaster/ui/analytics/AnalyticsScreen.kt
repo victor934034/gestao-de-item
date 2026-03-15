@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,9 +31,11 @@ fun AnalyticsScreen(
     val totalValue by viewModel.totalInventoryValue.collectAsState()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Analytics", fontWeight = FontWeight.Bold) }
+                title = { Text("Analytics", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { paddingValues ->
@@ -58,15 +60,15 @@ fun AnalyticsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Valor Total em Estoque", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                            Text("Valor Total em Estoque", color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f), fontSize = 14.sp)
                             Text(
                                 "R$ ${String.format("%,.2f", totalValue)}",
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Icon(Icons.Default.TrendingUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(40.dp))
+                        Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(40.dp))
                     }
                 }
             }
@@ -76,12 +78,12 @@ fun AnalyticsScreen(
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    HealthProgressBar("In Stock", stockHealth.inStockPercent, Color(0xFF4CAF50))
-                    HealthProgressBar("Low Stock", stockHealth.lowStockPercent, Color(0xFFFF9800))
-                    HealthProgressBar("Out of Stock", stockHealth.outOfStockPercent, Color(0xFFFF5252))
+                    HealthProgressBar("In Stock", stockHealth.inStockPercent, Color(0xFF43A047))
+                    HealthProgressBar("Low Stock", stockHealth.lowStockPercent, Color(0xFFFB8C00))
+                    HealthProgressBar("Out of Stock", stockHealth.outOfStockPercent, MaterialTheme.colorScheme.error)
                 }
             }
 
@@ -90,10 +92,10 @@ fun AnalyticsScreen(
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth().height(200.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = Color.White)
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Inventory Trend Chart Placeholder", color = Color.Gray)
+                    Text("Inventory Trend Chart Placeholder", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -109,7 +111,7 @@ fun HealthProgressBar(label: String, percent: Float, color: Color) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
-            progress = percent / 100f,
+            progress = { percent / 100f },
             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
             color = color,
             trackColor = color.copy(alpha = 0.1f)
@@ -123,6 +125,7 @@ fun AnalyticsSectionTitle(title: String) {
         title,
         fontWeight = FontWeight.Bold,
         style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(top = 8.dp)
     )
 }

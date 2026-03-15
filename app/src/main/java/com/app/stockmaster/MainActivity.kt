@@ -14,6 +14,9 @@ import com.app.stockmaster.ui.navigation.AppNavigation
 import com.app.stockmaster.ui.theme.StockMasterTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+import androidx.compose.runtime.LaunchedEffect
+import com.app.stockmaster.worker.StockNotificationWorker
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +24,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             StockMasterTheme {
                 val navController = rememberNavController()
+                
+                // Handle intent for navigation
+                LaunchedEffect(intent) {
+                    if (intent?.action == StockNotificationWorker.ACTION_SHOW_LOW_STOCK) {
+                        navController.navigate("inventory?filter=low_stock") {
+                            popUpTo("dashboard") { saveState = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+
                 AppNavigation(navController = navController)
             }
         }

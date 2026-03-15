@@ -2,7 +2,10 @@ package com.app.stockmaster.ui.navigation
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
-    object Inventory : Screen("inventory")
+    object Inventory : Screen("inventory") {
+        const val routeDefinition = "inventory?filter={filter}"
+        fun createRoute(filter: String? = null) = if (filter != null) "inventory?filter=$filter" else "inventory"
+    }
     object NewProduct : Screen("new_product")
     object EditProduct : Screen("edit_product/{itemId}") {
         fun createRoute(itemId: Int) = "edit_product/$itemId"
@@ -12,4 +15,5 @@ sealed class Screen(val route: String) {
     }
     object Analytics : Screen("analytics")
     object Settings : Screen("settings")
+    object Scanner : Screen("scanner")
 }

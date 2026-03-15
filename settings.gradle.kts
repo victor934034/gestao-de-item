@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "app gestao items"
+rootProject.name = "appgestaoitems"
 include(":app")
  
