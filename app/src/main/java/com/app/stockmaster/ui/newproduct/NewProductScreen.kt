@@ -242,18 +242,35 @@ fun NewProductScreen(
                         )
                     )
                     
-                    OutlinedTextField(
-                        value = imageUrl,
-                        onValueChange = { viewModel.updateImageUrl(it) },
-                        label = { Text("URL da Imagem (Opcional)", fontWeight = FontWeight.Medium) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = Color(0xFFF1F4F9)
-                        ),
-                        singleLine = true
-                    )
+                    if (!imageUrl.startsWith("data:image")) {
+                        OutlinedTextField(
+                            value = imageUrl,
+                            onValueChange = { viewModel.updateImageUrl(it) },
+                            label = { Text("URL da Imagem (Opcional)", fontWeight = FontWeight.Medium) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = Color(0xFFF1F4F9)
+                            ),
+                            singleLine = true
+                        )
+                    } else {
+                        // Display a read-only placeholder if it's base64 to avoid layout crash
+                        OutlinedTextField(
+                            value = "[Imagem salva no banco de dados]",
+                            onValueChange = {},
+                            label = { Text("URL da Imagem", fontWeight = FontWeight.Medium) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            readOnly = true,
+                            enabled = false,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledBorderColor = Color(0xFFF1F4F9),
+                                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
                 }
             }
 
