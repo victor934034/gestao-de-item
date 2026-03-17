@@ -144,8 +144,10 @@ fun BottomNavigationBar(navController: NavHostController) {
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.name) },
                 label = { Text(item.name) },
-                selected = currentDestination?.hierarchy?.any { 
-                    it.route?.split("?")?.firstOrNull() == item.route 
+                selected = currentDestination?.hierarchy?.any { destination ->
+                    val destRoute = destination.route?.substringBefore("?")?.substringBefore("/")
+                    val itemRoute = item.route.substringBefore("?")?.substringBefore("/")
+                    destRoute == itemRoute
                 } == true,
                 onClick = {
                     navController.navigate(item.route) {
