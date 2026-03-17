@@ -26,7 +26,7 @@ class TransactionRepository @Inject constructor(
         val delta = if (transaction.type == "INBOUND") transaction.quantity else -transaction.quantity
         
         // Use repository to update local and trigger remote sync
-        val item = itemRepository.getAllItems().first().find { it.id == transaction.itemId } ?: return
+        val item = itemRepository.getItemById(transaction.itemId) ?: return
         val newStock = item.currentStock + delta
         
         itemRepository.updateItem(item.copy(currentStock = newStock, updatedAt = System.currentTimeMillis()))

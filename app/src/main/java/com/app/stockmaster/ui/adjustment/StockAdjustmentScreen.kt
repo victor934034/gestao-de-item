@@ -34,11 +34,10 @@ fun StockAdjustmentScreen(
 ) {
     val item by viewModel.item.collectAsState()
     val quantity by viewModel.quantity.collectAsState()
-    val reason by viewModel.reason.collectAsState()
     val isAddition by viewModel.isAddition.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    var expanded by remember { mutableStateOf(false) }
-    val reasons = listOf("Compra / Recebimento", "Venda / Saída", "Devolução", "Avaria / Perda", "Inventário", "Outros")
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -197,7 +196,7 @@ fun StockAdjustmentScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = quantity,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) viewModel.updateQuantity(it) },
+                        onValueChange = { newVal -> if (newVal.all { char -> char.isDigit() }) viewModel.updateQuantity(newVal) },
                         label = { Text("Quantidade", fontWeight = FontWeight.Medium) },
                         suffix = { Text("unidades", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         modifier = Modifier.fillMaxWidth(),
@@ -214,43 +213,14 @@ fun StockAdjustmentScreen(
                         )
                     )
 
-                    Box {
-                        OutlinedTextField(
-                            value = reason,
-                            onValueChange = {},
-                            label = { Text("Motivo do Ajuste", fontWeight = FontWeight.Medium) },
-                            modifier = Modifier.fillMaxWidth(),
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = { expanded = true }) {
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                            )
+                    if (error != null) {
+                        Text(
+                            text = error!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 4.dp)
                         )
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f).background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            reasons.forEach { r ->
-                                DropdownMenuItem(
-                                    text = { Text(r, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface) },
-                                    onClick = {
-                                        viewModel.updateReason(r)
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
                     }
 
                     OutlinedTextField(
@@ -276,15 +246,24 @@ fun StockAdjustmentScreen(
 
                 Button(
                     onClick = { viewModel.confirmTransaction { onNavigateBack() } },
+                    enabled = !isSaving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Confirmar Alteração", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Default.Check, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Confirmar Alteração", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
             }
         }

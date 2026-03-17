@@ -29,3 +29,15 @@ data class BridgeStatusResponse(
     val count: Int? = null,
     val error: String? = null
 )
+
+data class BridgeVersionResponse(
+    val success: Boolean,
+    val version: BridgeVersion? = null,
+    val error: String? = null
+)
+
+data class BridgeVersion(
+    val latestVersion: String,
+    val minVersion: String,
+    val apkUrl: String
+)

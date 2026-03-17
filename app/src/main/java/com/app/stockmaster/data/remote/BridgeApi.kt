@@ -14,6 +14,9 @@ interface BridgeApi {
     @GET("status")
     suspend fun getStatus(): Response<Map<String, Any>>
 
+    @GET("version")
+    suspend fun getLatestVersion(): Response<BridgeVersionResponse>
+
     @GET("products")
     suspend fun getProducts(): Response<BridgeResponse<List<BridgeProduct>>>
 

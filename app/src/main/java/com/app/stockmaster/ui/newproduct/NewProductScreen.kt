@@ -42,6 +42,8 @@ fun NewProductScreen(
     val profitMargin by viewModel.profitMargin.collectAsState()
     val imageUrl by viewModel.imageUrl.collectAsState()
     val barcode by viewModel.barcode.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val error by viewModel.error.collectAsState()
     val isEditMode = viewModel.isEditMode
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -83,10 +85,15 @@ fun NewProductScreen(
                     },
                     actions = {
                         TextButton(
-                            onClick = { viewModel.saveProduct { onNavigateBack() } },
-                            modifier = Modifier.padding(end = 8.dp)
+                            onClick = { if (!isSaving) viewModel.saveProduct { onNavigateBack() } },
+                            modifier = Modifier.padding(end = 8.dp),
+                            enabled = !isSaving
                         ) {
-                            Text("SALVAR", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                            if (isSaving) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
+                            } else {
+                                Text("SALVAR", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -372,23 +379,44 @@ fun NewProductScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (!error.isNullOrBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = error!!,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { viewModel.saveProduct { onNavigateBack() } },
+                onClick = { if (!isSaving) viewModel.saveProduct { onNavigateBack() } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
                 shape = RoundedCornerShape(20.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp),
+                enabled = !isSaving
             ) {
-                Icon(Icons.Default.Save, contentDescription = null)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    if (isEditMode) "SALVAR ALTERAÇÕES" else "CRIAR PRODUTO", 
-                    fontWeight = FontWeight.Black,
-                    fontSize = 15.sp
-                )
+                if (isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 3.dp)
+                } else {
+                    Icon(Icons.Default.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        if (isEditMode) "SALVAR ALTERAÇÕES" else "CRIAR PRODUTO", 
+                        fontWeight = FontWeight.Black,
+                        fontSize = 15.sp
+                    )
+                }
             }
 
             TextButton(

@@ -81,7 +81,7 @@ fun DashboardScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "$greeting, Victor!", 
+                                text = greeting, 
                                 fontSize = 12.sp, 
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium

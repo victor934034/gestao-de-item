@@ -73,8 +73,8 @@ class NewProductViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val profitMargin: StateFlow<Double> = combine(_costPrice, _salePrice) { cost, sale ->
-        val c = cost.toDoubleOrNull() ?: 0.0
-        val s = sale.toDoubleOrNull() ?: 0.0
+        val c = cost.replace(",", ".").toDoubleOrNull() ?: 0.0
+        val s = sale.replace(",", ".").toDoubleOrNull() ?: 0.0
         if (c > 0) ((s - c) / c) * 100 else 0.0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
@@ -132,8 +132,8 @@ class NewProductViewModel @Inject constructor(
                     sku = _sku.value,
                     barcode = _barcode.value, 
                     category = _category.value,
-                    costPrice = _costPrice.value.toDoubleOrNull() ?: 0.0,
-                    salePrice = _salePrice.value.toDoubleOrNull() ?: 0.0,
+                    costPrice = _costPrice.value.replace(",", ".").toDoubleOrNull() ?: 0.0,
+                    salePrice = _salePrice.value.replace(",", ".").toDoubleOrNull() ?: 0.0,
                     currentStock = _initialStock.value.toIntOrNull() ?: 0,
                     minStockAlert = _minStock.value.toIntOrNull() ?: 5,
                     imageUri = finalImageUrl,

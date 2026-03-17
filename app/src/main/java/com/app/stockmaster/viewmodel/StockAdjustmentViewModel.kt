@@ -28,9 +28,6 @@ class StockAdjustmentViewModel @Inject constructor(
     private val _quantity = MutableStateFlow("")
     val quantity: StateFlow<String> = _quantity.asStateFlow()
 
-    private val _reason = MutableStateFlow("")
-    val reason: StateFlow<String> = _reason.asStateFlow()
-
     private val _isAddition = MutableStateFlow(true)
     val isAddition: StateFlow<Boolean> = _isAddition.asStateFlow()
 
@@ -38,10 +35,6 @@ class StockAdjustmentViewModel @Inject constructor(
         if (value.isEmpty() || value.all { it.isDigit() }) {
             _quantity.value = value
         }
-    }
-
-    fun updateReason(value: String) {
-        _reason.value = value
     }
 
     fun setType(isAddition: Boolean) {
@@ -55,9 +48,12 @@ class StockAdjustmentViewModel @Inject constructor(
     val error: StateFlow<String?> = _error.asStateFlow()
 
     fun confirmTransaction(onSuccess: () -> Unit) {
-        val qty = _quantity.value.toIntOrNull() ?: return
-        if (qty <= 0) return
-        if (_reason.value.isEmpty()) return
+        val qty = _quantity.value.toIntOrNull()
+        
+        if (qty == null || qty <= 0) {
+            _error.value = "Por favor, insira uma quantidade válida."
+            return
+        }
 
         _isSaving.value = true
         _error.value = null
@@ -68,7 +64,7 @@ class StockAdjustmentViewModel @Inject constructor(
                     itemId = itemId,
                     type = if (_isAddition.value) "INBOUND" else "OUTBOUND",
                     quantity = qty,
-                    reason = _reason.value,
+                    reason = "Ajuste Manual",
                     date = System.currentTimeMillis()
                 )
                 transactionRepository.addTransaction(transaction)
