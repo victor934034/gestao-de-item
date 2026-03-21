@@ -16,6 +16,9 @@ interface TransactionDao {
     """)
     fun getRecentTransactions(): Flow<List<TransactionWithItem>>
 
+    @Query("SELECT * FROM transactions WHERE remoteId IS NULL")
+    suspend fun getUnsyncedTransactions(): List<TransactionEntity>
+
     @Query("SELECT COUNT(*) FROM transactions WHERE date >= :startOfDay")
     fun getTodayMovements(startOfDay: Long): Flow<Int>
 
@@ -27,6 +30,6 @@ interface TransactionDao {
     """)
     fun getWeeklyActivity(weekStart: Long): Flow<List<DayActivity>>
 
-    @Insert
-    suspend fun insertTransaction(transaction: TransactionEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTransaction(transaction: TransactionEntity): Long
 }

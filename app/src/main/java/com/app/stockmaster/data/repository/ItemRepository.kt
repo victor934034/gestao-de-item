@@ -140,6 +140,10 @@ class ItemRepository @Inject constructor(
             if (response.isSuccessful) {
                 val products = response.body()?.products ?: emptyList()
                 android.util.Log.d("Sync", "Received ${products.size} products from Unified Backend")
+                
+                // Track remote IDs for device parity
+                val remoteTinyIds = mutableSetOf<String>()
+                
                 products.forEach { bp ->
                     // Convert Any id to a clean string (no .0)
                     val rawId = bp.id
@@ -148,6 +152,7 @@ class ItemRepository @Inject constructor(
                         is Float -> rawId.toLong().toString()
                         else -> rawId.toString()
                     }
+                    remoteTinyIds.add(remoteIdStr)
 
                     // Matching strategy: 1. By remoteId (tinyId), 2. By Barcode, 3. By SKU
                     val existing = itemDao.getItemByTinyId(remoteIdStr) 
@@ -170,6 +175,17 @@ class ItemRepository @Inject constructor(
                     )
                     itemDao.insertItem(entity)
                 }
+
+                // Device Parity: Delete local items that are not in remote
+                // Only consider items that HAVE a tinyId (synced items)
+                val localItems = itemDao.getAllItems().first()
+                localItems.forEach { local ->
+                    if (local.tinyId != null && !remoteTinyIds.contains(local.tinyId)) {
+                        android.util.Log.d("Sync", "Deleting local item missing from remote: ${local.name} (${local.tinyId})")
+                        itemDao.deleteItem(local.id)
+                    }
+                }
+
                 Result.success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Sem corpo de erro"

@@ -251,6 +251,56 @@ app.post('/api/stock/upload', upload.single('image'), async (req, res) => {
     }
 });
 
+// Transactions Endpoints
+app.get('/api/stock/transactions', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('transacoes')
+            .select('*')
+            .order('data_hora', { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            transactions: data
+        });
+    } catch (error) {
+        console.error('[BRIDGE] Get Transactions Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+app.post('/api/stock/transactions', async (req, res) => {
+    const transaction = req.body;
+    console.log(`[BRIDGE] POST new transaction for item: ${transaction.item_name}`);
+
+    try {
+        const { data, error } = await supabase
+            .from('transacoes')
+            .insert([transaction])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            transaction: data
+        });
+    } catch (error) {
+        console.error('[BRIDGE] Post Transaction Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Bridge server running on port ${port}`);
 });

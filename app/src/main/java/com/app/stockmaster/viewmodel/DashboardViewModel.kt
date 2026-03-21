@@ -65,6 +65,12 @@ class DashboardViewModel @Inject constructor(
                 .onFailure { e ->
                     _syncError.value = e.message
                 }
+            
+            transactionRepository.syncWithBridge()
+                .onFailure { e ->
+                    // Optionally handle transaction sync error separately
+                    if (_syncError.value == null) _syncError.value = e.message
+                }
             _syncing.value = false
         }
     }

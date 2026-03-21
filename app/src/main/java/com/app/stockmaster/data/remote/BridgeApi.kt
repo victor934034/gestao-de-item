@@ -7,7 +7,18 @@ data class BridgeResponse<T>(
     val success: Boolean,
     val products: T? = null,
     val product: T? = null,
+    val transactions: T? = null,
+    val transaction: T? = null,
     val error: String? = null
+)
+
+data class BridgeTransaction(
+    val id: Any? = null,
+    val item_id: Any,
+    val item_name: String,
+    val quantidade: Int,
+    val tipo: String,
+    val data_hora: String? = null
 )
 
 interface BridgeApi {
@@ -45,4 +56,10 @@ interface BridgeApi {
     @Multipart
     @POST("upload")
     suspend fun uploadImage(@Part image: okhttp3.MultipartBody.Part): Response<Map<String, Any>>
+
+    @GET("transactions")
+    suspend fun getTransactions(): Response<BridgeResponse<List<BridgeTransaction>>>
+
+    @POST("transactions")
+    suspend fun addBridgeTransaction(@Body transaction: BridgeTransaction): Response<BridgeResponse<BridgeTransaction>>
 }

@@ -105,7 +105,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingsCategory("Sobre")
-                SettingsItem("Versão do App", Icons.Default.Info, "v1.1.0 (Build 002)") { }
+                SettingsItem("Versão do App", Icons.Default.Info, "v1.0.2 (Build 002)") { }
                 SettingsItem("Licenças", Icons.Default.CardMembership, "Bibliotecas open source") { }
             }
 
