@@ -157,7 +157,7 @@ fun NewProductScreen(
                         shadowElevation = 4.dp
                     ) {
                         IconButton(onClick = { imagePickerLauncher.launch("image/*") }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit Image", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Edit, contentDescription = "Editar Imagem", tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -217,7 +217,7 @@ fun NewProductScreen(
                                     Text("GERAR", fontSize = 12.sp, fontWeight = FontWeight.Black)
                                 }
                                 IconButton(onClick = { navController.navigate(com.app.stockmaster.ui.navigation.Screen.Scanner.route) }) { 
-                                    Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan", tint = MaterialTheme.colorScheme.primary) 
+                                    Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear", tint = MaterialTheme.colorScheme.primary) 
                                 }
                             }
                         },

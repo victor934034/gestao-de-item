@@ -21,7 +21,8 @@ import com.app.stockmaster.MainActivity
 class StockNotificationWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val itemDao: ItemDao
+    private val itemDao: ItemDao,
+    private val itemRepository: com.app.stockmaster.data.repository.ItemRepository
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -31,6 +32,13 @@ class StockNotificationWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
+        // Sync with bridge before checking stock to ensure shared data is up to date
+        try {
+            itemRepository.syncWithBridge()
+        } catch (e: Exception) {
+            android.util.Log.e("StockWorker", "Sync failed during background work", e)
+        }
+
         val lowStockItems = itemDao.getLowStockItems().first()
         
         if (lowStockItems.isNotEmpty()) {

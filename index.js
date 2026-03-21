@@ -24,6 +24,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (APKs for updates)
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // Routes
 app.get('/api/stock/status', async (req, res) => {
     try {
@@ -47,6 +50,20 @@ app.get('/api/stock/status', async (req, res) => {
             success: false
         });
     }
+});
+
+// Versioning Endpoint for App Updates
+const APP_VERSION_INFO = {
+    latestVersion: "1.0.2",
+    minVersion: "1.0.0",
+    apkUrl: "https://app-backend.zdc13k.easypanel.host/public/apk/app-release.apk"
+};
+
+app.get('/api/stock/version', (req, res) => {
+    res.json({
+        success: true,
+        version: APP_VERSION_INFO
+    });
 });
 
 app.get('/api/stock/products', async (req, res) => {

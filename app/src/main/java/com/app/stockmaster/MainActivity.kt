@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.app.stockmaster.ui.navigation.AppNavigation
 import com.app.stockmaster.ui.theme.StockMasterTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.app.stockmaster.BuildConfig
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf

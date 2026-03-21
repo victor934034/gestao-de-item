@@ -1,5 +1,9 @@
 package com.app.stockmaster.ui.inventory
 
+import androidx.navigation.*
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -65,8 +69,16 @@ fun InventoryScreen(
                     TopAppBar(
                         title = { Text("Estoque", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp) },
                         navigationIcon = {
-                            IconButton(onClick = { /* TODO: Drawer */ }) {
-                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            IconButton(onClick = { 
+                                navController.navigate(com.app.stockmaster.ui.navigation.Screen.Dashboard.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }) {
+                                Icon(Icons.Default.Home, contentDescription = "Dashboard", tint = MaterialTheme.colorScheme.onSurface)
                             }
                         },
                         actions = {

@@ -34,7 +34,7 @@ fun AnalyticsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Analytics", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+                title = { Text("Análises", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
@@ -74,28 +74,28 @@ fun AnalyticsScreen(
             }
 
             // Stock Health Section
-            AnalyticsSectionTitle("Stock Health")
+            AnalyticsSectionTitle("Saúde do Estoque")
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    HealthProgressBar("In Stock", stockHealth.inStockPercent, Color(0xFF43A047))
-                    HealthProgressBar("Low Stock", stockHealth.lowStockPercent, Color(0xFFFB8C00))
-                    HealthProgressBar("Out of Stock", stockHealth.outOfStockPercent, MaterialTheme.colorScheme.error)
+                    HealthProgressBar("Em Estoque", stockHealth.inStockPercent, Color(0xFF43A047))
+                    HealthProgressBar("Estoque Baixo", stockHealth.lowStockPercent, Color(0xFFFB8C00))
+                    HealthProgressBar("Esgotado", stockHealth.outOfStockPercent, MaterialTheme.colorScheme.error)
                 }
             }
 
             // Inventory Trends (Placeholder for chart)
-            AnalyticsSectionTitle("Inventory Trends (30 Days)")
+            AnalyticsSectionTitle("Tendências de Inventário (30 Dias)")
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth().height(200.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Inventory Trend Chart Placeholder", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Gráfico de Tendências (Em breve)", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

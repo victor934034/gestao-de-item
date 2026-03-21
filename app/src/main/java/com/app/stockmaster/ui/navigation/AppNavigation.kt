@@ -130,10 +130,10 @@ data class BottomNavItem(
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        BottomNavItem("Dashboard", Screen.Dashboard.route, Icons.Default.Dashboard),
-        BottomNavItem("Inventory", Screen.Inventory.route, Icons.Default.Inventory),
-        BottomNavItem("Analytics", Screen.Analytics.route, Icons.Default.Analytics),
-        BottomNavItem("Settings", Screen.Settings.route, Icons.Default.Settings)
+        BottomNavItem("Painel", Screen.Dashboard.route, Icons.Default.Dashboard),
+        BottomNavItem("Estoque", Screen.Inventory.route, Icons.Default.Inventory),
+        BottomNavItem("Relatórios", Screen.Analytics.route, Icons.Default.Analytics),
+        BottomNavItem("Configurações", Screen.Settings.route, Icons.Default.Settings)
     )
 
     NavigationBar {
@@ -151,10 +151,16 @@ fun BottomNavigationBar(navController: NavHostController) {
                 } == true,
                 onClick = {
                     navController.navigate(item.route) {
+                        // Pop up to the start destination of the graph to
+                        // avoid building up a large stack of destinations
+                        // on the back stack as users select items
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
+                        // Avoid multiple copies of the same destination when
+                        // reselecting the same item
                         launchSingleTop = true
+                        // Restore state when reselecting a previously selected item
                         restoreState = true
                     }
                 }
