@@ -82,11 +82,10 @@ class TransactionRepository @Inject constructor(
 
                     val entity = TransactionEntity(
                         itemId = item.id,
-                        itemName = bt.item_name,
                         type = bt.tipo,
                         quantity = bt.quantidade,
                         reason = "Sincronizado",
-                        timestamp = try { 
+                        date = try { 
                             // Convert ISO 8601 to Long if available, or just use now
                             System.currentTimeMillis() 
                         } catch (e: Exception) { System.currentTimeMillis() },

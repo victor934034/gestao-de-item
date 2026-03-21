@@ -13,5 +13,6 @@ data class TransactionWithItem(
     val quantity: Int,
     val reason: String,
     val notes: String? = null,
-    val date: Long
+    val date: Long,
+    val remoteId: String? = null
 )

@@ -7,6 +7,7 @@ import com.app.stockmaster.data.remote.BridgeProduct
 import com.app.stockmaster.data.remote.ErpApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import com.app.stockmaster.data.remote.BridgeProductResponse
 import com.google.gson.Gson
@@ -27,7 +28,7 @@ import java.io.FileOutputStream
 
 @Singleton
 class ItemRepository @Inject constructor(
-    private val itemDao: com.app.stockmaster.data.local.dao.ItemDao,
+    val itemDao: com.app.stockmaster.data.local.dao.ItemDao,
     private val erpApi: com.app.stockmaster.data.remote.ErpApi,
     private val bridgeApi: com.app.stockmaster.data.remote.BridgeApi,
     @ApplicationContext private val context: Context
@@ -178,8 +179,10 @@ class ItemRepository @Inject constructor(
 
                 // Device Parity: Delete local items that are not in remote
                 // Only consider items that HAVE a tinyId (synced items)
+                // Device Parity: Delete local items that are not in remote
+                // Only consider items that HAVE a tinyId (synced items)
                 val localItems = itemDao.getAllItems().first()
-                localItems.forEach { local ->
+                for (local in localItems) {
                     if (local.tinyId != null && !remoteTinyIds.contains(local.tinyId)) {
                         android.util.Log.d("Sync", "Deleting local item missing from remote: ${local.name} (${local.tinyId})")
                         itemDao.deleteItem(local.id)
