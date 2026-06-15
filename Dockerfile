@@ -1,13 +1,23 @@
-FROM node:18-slim
+# Backend unificado: Gestão de Items + Entrega Conexão
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+# Dependências nativas necessárias para bcrypt no Alpine
+RUN apk add --no-cache make gcc g++ python3
 
-RUN npm install
+COPY backend/package*.json ./
 
-COPY . .
+RUN npm install && apk del make gcc g++ python3
+
+COPY backend/ .
+
+RUN mkdir -p uploads/apk uploads/pdfs
 
 EXPOSE 3000
 
-CMD ["node", "index.js"]
+ENV PORT=3000
+ENV NODE_ENV=production
+
+CMD ["node", "server.js"]
+

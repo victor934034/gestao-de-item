@@ -95,6 +95,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 SettingsItem("Backup na Nuvem", Icons.Default.CloudSync, "Sincronizar com Bridge/Supabase") {
                     viewModel.syncBackup()
                 }
+                SettingsItem("Sincronizar com Olist", Icons.Default.Sync, "Enviar itens para o ERP da Olist") {
+                    viewModel.syncWithOlist()
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingsCategory("Aparência")

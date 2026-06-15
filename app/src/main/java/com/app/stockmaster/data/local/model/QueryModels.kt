@@ -12,7 +12,6 @@ data class TransactionWithItem(
     val type: String,
     val quantity: Int,
     val reason: String,
-    val notes: String? = null,
     val date: Long,
     val remoteId: String? = null
 )

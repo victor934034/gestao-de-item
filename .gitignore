@@ -17,3 +17,15 @@ node_modules/
 .env
 .env.*
 !.env.example
+backend/node_modules/
+backend/.env
+backend/uploads/pdfs/*.pdf
+package-lock.json
+# Debug scripts legados (raiz)
+check_*.js
+find_pk.js
+inspect_schema.js
+test_constraints.js
+verify_sql.js
+test_remote_bridge.js
+test_supabase.js

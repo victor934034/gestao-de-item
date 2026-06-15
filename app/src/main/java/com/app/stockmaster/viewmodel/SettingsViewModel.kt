@@ -60,6 +60,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun syncWithOlist() {
+        viewModelScope.launch {
+            _uiState.value = SettingsUiState.Loading("Sincronizando com a Olist...")
+            val result = repository.syncItemsToTiny()
+            _uiState.value = if (result.isSuccess) {
+                SettingsUiState.Success("Itens enviados para a Olist com sucesso!")
+            } else {
+                SettingsUiState.Error("Erro na sincronização: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
+
     fun resetState() {
         _uiState.value = SettingsUiState.Idle
     }

@@ -72,11 +72,10 @@ class TransactionRepository @Inject constructor(
                 val remoteTransactions = response.body()?.transactions ?: emptyList()
                 remoteTransactions.forEach { bt ->
                     val remoteIdStr = bt.id?.toString() ?: return@forEach
-                    
-                    // Logic to avoid double counting is tricky if item sync already updated stock
-                    // But for "Recent Activity" view, we just need the records
-                    
-                    // Find item by remote ID
+
+                    // Skip if already exists locally — avoids duplicates on every sync
+                    if (transactionDao.getByRemoteId(remoteIdStr) != null) return@forEach
+
                     val itemTinyId = bt.item_id.toString().split(".")[0]
                     val item = itemRepository.itemDao.getItemByTinyId(itemTinyId) ?: return@forEach
 
@@ -85,15 +84,9 @@ class TransactionRepository @Inject constructor(
                         type = bt.tipo,
                         quantity = bt.quantidade,
                         reason = "Sincronizado",
-                        date = try { 
-                            // Convert ISO 8601 to Long if available, or just use now
-                            System.currentTimeMillis() 
-                        } catch (e: Exception) { System.currentTimeMillis() },
+                        date = System.currentTimeMillis(),
                         remoteId = remoteIdStr
                     )
-                    
-                    // Only insert if not exists locally by remoteId
-                    // Note: TransactionDao doesn't have getByRemoteId yet, I'll add or use a more complex query
                     transactionDao.insertTransaction(entity)
                 }
                 Result.success(Unit)

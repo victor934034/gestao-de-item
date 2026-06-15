@@ -47,6 +47,28 @@ data class TinyStockProduct(
     val saldo: Double?
 )
 
+data class TinyCreateUpdateResponse(
+    val retorno: TinyCreateUpdateReturn
+)
+
+data class TinyCreateUpdateReturn(
+    val status: String,
+    val registros: TinyRegistros? = null,
+    val erros: List<TinyError>? = null
+)
+
+data class TinyRegistros(
+    val registro: TinyRegistro? = null
+)
+
+data class TinyRegistro(
+    val id: String? = null,
+    val codigo: String? = null,
+    val nome: String? = null,
+    val sequencia: String? = null,
+    val status: String? = null
+)
+
 // Keeping the quote models for reference if the user needs them later
 data class QuoteRequest(val cepDestino: String)
 data class QuoteResponse(val retorno: QuoteReturnInfo)

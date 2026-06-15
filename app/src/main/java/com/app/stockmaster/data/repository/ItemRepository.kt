@@ -130,23 +130,21 @@ class ItemRepository @Inject constructor(
     suspend fun syncWithBridge(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             android.util.Log.d("Sync", "Starting bidirectional sync...")
-            
-            // 1. Push local changes first
-            pushLocalItemsToRemote()
-            
+
+            // 1. Push ALL local items first (create new, update existing)
+            val allPushed = pushLocalItemsToRemote()
+
             // 2. Pull remote changes
             val response = bridgeApi.getProducts()
-            android.util.Log.d("Sync", "Supabase Pull Response Code: ${response.code()}")
-            
+            android.util.Log.d("Sync", "Bridge Pull Response: ${response.code()}")
+
             if (response.isSuccessful) {
                 val products = response.body()?.products ?: emptyList()
-                android.util.Log.d("Sync", "Received ${products.size} products from Unified Backend")
-                
-                // Track remote IDs for device parity
+                android.util.Log.d("Sync", "Received ${products.size} products from Bridge")
+
                 val remoteTinyIds = mutableSetOf<String>()
-                
+
                 products.forEach { bp ->
-                    // Convert Any id to a clean string (no .0)
                     val rawId = bp.id
                     val remoteIdStr = when (rawId) {
                         is Double -> rawId.toLong().toString()
@@ -155,45 +153,45 @@ class ItemRepository @Inject constructor(
                     }
                     remoteTinyIds.add(remoteIdStr)
 
-                    // Matching strategy: 1. By remoteId (tinyId), 2. By Barcode, 3. By SKU
-                    val existing = itemDao.getItemByTinyId(remoteIdStr) 
+                    val existing = itemDao.getItemByTinyId(remoteIdStr)
                         ?: (if (!bp.barcode.isNullOrBlank()) itemDao.getItemByBarcode(bp.barcode) else null)
-                        ?: itemDao.getItemBySku(remoteIdStr) 
-                    
+                        ?: itemDao.getItemBySku(remoteIdStr)
+                        ?: itemDao.getItemByName(bp.nome)
+
                     val entity = ItemEntity(
                         id = existing?.id ?: 0,
                         name = bp.nome,
-                        sku = existing?.sku ?: remoteIdStr, // Preserve local SKU if exists
-                        barcode = bp.barcode ?: existing?.barcode ?: "", 
-                        category = bp.modo_estocagem ?: "Geral",
-                        costPrice = bp.custo ?: 0.0,
-                        salePrice = bp.preco_venda ?: 0.0,
+                        sku = existing?.sku ?: remoteIdStr,
+                        barcode = bp.barcode ?: existing?.barcode ?: "",
+                        category = bp.modo_estocagem ?: existing?.category ?: "Geral",
+                        costPrice = bp.custo ?: existing?.costPrice ?: 0.0,
+                        salePrice = bp.preco_venda ?: existing?.salePrice ?: 0.0,
                         currentStock = bp.quantidade.toInt(),
-                        minStockAlert = (existing?.minStockAlert ?: 5),
-                        tinyId = remoteIdStr, 
+                        minStockAlert = existing?.minStockAlert ?: 5,
+                        tinyId = remoteIdStr,
                         imageUri = if (!bp.foto_url.isNullOrBlank()) bp.foto_url else existing?.imageUri,
                         updatedAt = System.currentTimeMillis()
                     )
                     itemDao.insertItem(entity)
                 }
 
-                // Device Parity: Delete local items that are not in remote
-                // Only consider items that HAVE a tinyId (synced items)
-                // Device Parity: Delete local items that are not in remote
-                // Only consider items that HAVE a tinyId (synced items)
-                val localItems = itemDao.getAllItems().first()
-                for (local in localItems) {
-                    if (local.tinyId != null && !remoteTinyIds.contains(local.tinyId)) {
-                        android.util.Log.d("Sync", "Deleting local item missing from remote: ${local.name} (${local.tinyId})")
-                        itemDao.deleteItem(local.id)
+                // Device Parity: only delete local items not in remote if all pushes succeeded
+                // (avoids deleting items that simply failed to push)
+                if (allPushed) {
+                    val localItems = itemDao.getAllItems().first()
+                    for (local in localItems) {
+                        if (local.tinyId != null && !remoteTinyIds.contains(local.tinyId)) {
+                            android.util.Log.d("Sync", "Parity: removing local item not in remote: ${local.name}")
+                            itemDao.deleteItem(local.id)
+                        }
                     }
                 }
 
                 Result.success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Sem corpo de erro"
-                android.util.Log.e("Sync", "Supabase Pull Error Response (${response.code()}): $errorBody")
-                Result.failure(Exception("Erro na Supabase (Pull): ${response.code()} - $errorBody"))
+                android.util.Log.e("Sync", "Bridge Pull Error (${response.code()}): $errorBody")
+                Result.failure(Exception("Erro ao sincronizar: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
             android.util.Log.e("Sync", "Sync Exception", e)
@@ -201,16 +199,27 @@ class ItemRepository @Inject constructor(
         }
     }
 
-    suspend fun pushLocalItemsToRemote() = withContext(Dispatchers.IO) {
+    suspend fun pushLocalItemsToRemote(): Boolean = withContext(Dispatchers.IO) {
+        var allSucceeded = true
         try {
-            val unsynced = itemDao.getUnsyncedItems()
-            android.util.Log.d("Sync", "Found ${unsynced.size} unsynced items to push")
-            unsynced.forEach { item ->
-                addRemoteProduct(item)
+            val allItems = itemDao.getAllItems().first()
+            android.util.Log.d("Sync", "Pushing ${allItems.size} items to remote")
+            allItems.forEach { item ->
+                val result = if (item.tinyId == null) {
+                    addRemoteProduct(item)
+                } else {
+                    updateRemoteProduct(item)
+                }
+                if (result.isFailure) {
+                    allSucceeded = false
+                    android.util.Log.w("Sync", "Failed to push ${item.name}: ${result.exceptionOrNull()?.message}")
+                }
             }
         } catch (e: Exception) {
             android.util.Log.e("Sync", "Error during push sync", e)
+            allSucceeded = false
         }
+        allSucceeded
     }
 
     suspend fun updateRemoteStock(itemId: Int, newQuantity: Int): Result<Unit> = withContext(Dispatchers.IO) {
@@ -302,6 +311,121 @@ class ItemRepository @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("Sync", "Exception updating remote product", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun syncItemsToTiny(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val allItems = itemDao.getAllItems().first()
+            var created = 0
+            var updated = 0
+            var errors = 0
+
+            for (item in allItems) {
+                if (item.tinyId == null) {
+                    val result = createProductInTiny(item)
+                    result.onSuccess { tinyId ->
+                        itemDao.insertItem(item.copy(tinyId = tinyId, updatedAt = System.currentTimeMillis()))
+                        created++
+                    }.onFailure {
+                        android.util.Log.e("OlistSync", "Failed to create ${item.name}: ${it.message}")
+                        errors++
+                    }
+                } else {
+                    val result = updateProductInTiny(item)
+                    result.onSuccess { updated++ }.onFailure {
+                        android.util.Log.e("OlistSync", "Failed to update ${item.name}: ${it.message}")
+                        errors++
+                    }
+                }
+            }
+
+            android.util.Log.d("OlistSync", "Done: created=$created updated=$updated errors=$errors")
+            if (errors > 0 && (created + updated) == 0) {
+                Result.failure(Exception("Falha ao sincronizar $errors item(s) com a Olist"))
+            } else if (errors > 0) {
+                Result.success(Unit) // partial success — don't block caller
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("OlistSync", "syncItemsToTiny exception", e)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun createProductInTiny(item: ItemEntity): Result<String> {
+        return try {
+            val productMap = mapOf(
+                "produto" to mapOf(
+                    "nome" to item.name,
+                    "codigo" to item.sku.ifBlank { null },
+                    "preco" to item.salePrice,
+                    "tipo" to "P",
+                    "situacao" to "A",
+                    "unidade" to "UN",
+                    "controlar_estoque" to "S",
+                    "estoque_atual" to item.currentStock,
+                    "preco_custo" to item.costPrice
+                )
+            )
+            val productJson = Gson().toJson(productMap)
+            android.util.Log.d("OlistSync", "Creating product in Tiny: $productJson")
+
+            val response = erpApi.createProduct(productJson)
+            if (!response.isSuccessful) {
+                return Result.failure(Exception("HTTP ${response.code()}: ${response.errorBody()?.string()}"))
+            }
+            val retorno = response.body()?.retorno
+                ?: return Result.failure(Exception("Resposta vazia da Tiny"))
+
+            if (retorno.status == "OK") {
+                val tinyId = retorno.registros?.registro?.id
+                    ?: return Result.failure(Exception("ID não retornado pela Olist"))
+                android.util.Log.d("OlistSync", "Product created in Tiny with id=$tinyId")
+                Result.success(tinyId)
+            } else {
+                val error = retorno.erros?.firstOrNull()?.erro ?: "Erro desconhecido na Olist"
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun updateProductInTiny(item: ItemEntity): Result<Unit> {
+        return try {
+            val productMap = mapOf(
+                "produto" to mapOf(
+                    "id" to item.tinyId,
+                    "nome" to item.name,
+                    "codigo" to item.sku.ifBlank { null },
+                    "preco" to item.salePrice,
+                    "situacao" to "A",
+                    "unidade" to "UN",
+                    "controlar_estoque" to "S",
+                    "estoque_atual" to item.currentStock,
+                    "preco_custo" to item.costPrice
+                )
+            )
+            val productJson = Gson().toJson(productMap)
+            android.util.Log.d("OlistSync", "Updating product in Tiny id=${item.tinyId}: $productJson")
+
+            val response = erpApi.updateProduct(productJson)
+            if (!response.isSuccessful) {
+                return Result.failure(Exception("HTTP ${response.code()}: ${response.errorBody()?.string()}"))
+            }
+            val retorno = response.body()?.retorno
+                ?: return Result.failure(Exception("Resposta vazia da Tiny"))
+
+            if (retorno.status == "OK") {
+                Result.success(Unit)
+            } else {
+                val error = retorno.erros?.firstOrNull()?.erro ?: "Erro desconhecido na Olist"
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
