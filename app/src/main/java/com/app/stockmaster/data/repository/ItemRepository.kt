@@ -155,7 +155,6 @@ class ItemRepository @Inject constructor(
 
                     val existing = itemDao.getItemByTinyId(remoteIdStr)
                         ?: (if (!bp.barcode.isNullOrBlank()) itemDao.getItemByBarcode(bp.barcode) else null)
-                        ?: itemDao.getItemBySku(remoteIdStr)
                         ?: itemDao.getItemByName(bp.nome)
 
                     val entity = ItemEntity(
@@ -231,8 +230,13 @@ class ItemRepository @Inject constructor(
                 android.util.Log.w("Sync", "Item $itemId missing remote ID, attempting to add first")
                 val addResult = addRemoteProduct(item)
                 if (addResult.isFailure) return@withContext addResult
-                // Re-fetch to get new remote ID
-                return@withContext updateRemoteStock(itemId, newQuantity)
+                // Re-fetch updated item to get the new tinyId — avoids recursion
+                val updatedItem = itemDao.getItemById(itemId)
+                val newRemoteId = updatedItem?.tinyId
+                    ?: return@withContext Result.failure(Exception("ID remoto não disponível após sincronização"))
+                val patchResponse = bridgeApi.updateQuantity(newRemoteId, mapOf("quantidade" to newQuantity))
+                return@withContext if (patchResponse.isSuccessful) Result.success(Unit)
+                else Result.failure(Exception("Erro ao atualizar estoque: ${patchResponse.code()}"))
             }
             
             val response = bridgeApi.updateQuantity(remoteId, mapOf("quantidade" to newQuantity))

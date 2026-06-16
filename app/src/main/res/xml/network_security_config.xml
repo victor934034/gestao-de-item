@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Backend HTTPS principal -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">gestao-de-item-gestao.mgf7wb.easypanel.host</domain>
+    </domain-config>
+    <!-- Fallback HTTP direto ao IP (compatibilidade com APKs antigos) -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">app-backend.zdc13k.easypanel.host</domain>
+        <domain>187.77.34.80</domain>
+    </domain-config>
+    <!-- Tiny / Olist ERP -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.tiny.com.br</domain>
+        <domain includeSubdomains="true">erp.tiny.com.br</domain>
+    </domain-config>
+    <!-- Supabase Storage (imagens) -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">supabase.co</domain>
     </domain-config>
 </network-security-config>

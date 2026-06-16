@@ -1,5 +1,6 @@
 package com.app.stockmaster.di
 
+import com.app.stockmaster.BuildConfig
 import com.app.stockmaster.data.remote.AuthInterceptor
 import com.app.stockmaster.data.remote.ErpApi
 import com.app.stockmaster.data.remote.BridgeApi
@@ -14,6 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 import javax.inject.Named
+import java.util.concurrent.TimeUnit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -34,10 +36,12 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
         }
-        
         return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
@@ -48,11 +52,12 @@ object NetworkModule {
     @Named("SupabaseHttpClient")
     fun provideSupabaseHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
         }
-        
-        // Unified backend doesn't need Supabase headers, it handles it internally
         return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .build()
     }
