@@ -3,317 +3,936 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StockMaster — Painel Web</title>
+<title>StockMaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c63ff;--accent2:#4fc3f7;--danger:#ef5350;--success:#66bb6a;--text:#e0e0e0;--muted:#9e9e9e}
-  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
-  header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-  header h1{font-size:18px;font-weight:700;color:#fff}header span{font-size:13px;color:var(--muted)}
-  nav{display:flex;gap:4px;margin-left:auto}
-  nav button{background:none;border:none;color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;transition:.2s}
-  nav button.active,nav button:hover{background:var(--accent);color:#fff}
-  main{max-width:1200px;margin:0 auto;padding:24px}
-  .section{display:none}.section.active{display:block}
-  h2{font-size:20px;font-weight:600;margin-bottom:20px}
-  .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
-  .toolbar input{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;outline:none}
-  .toolbar input:focus{border-color:var(--accent)}
-  .btn{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;display:inline-flex;align-items:center;gap:6px}
-  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
-  .btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
-  .btn-ghost{background:var(--border);color:var(--text)}.btn-ghost:hover{background:var(--accent);color:#fff}
-  .btn-sm{padding:6px 12px;font-size:13px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:.2s}
-  .card:hover{border-color:var(--accent)}
-  .card-img{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:12px;background:var(--border)}
-  .card-img-placeholder{width:100%;height:140px;border-radius:8px;margin-bottom:12px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:40px}
-  .card h3{font-size:15px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card .barcode{font-size:12px;color:var(--muted);margin-bottom:8px}
-  .card .stock{font-size:22px;font-weight:700;color:var(--accent2);margin-bottom:4px}
-  .card .stock.low{color:var(--danger)}
-  .card .price{font-size:13px;color:var(--muted)}
-  .card-actions{display:flex;gap:8px;margin-top:12px}
-  table{width:100%;border-collapse:collapse}
-  th{text-align:left;padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
-  td{padding:12px 16px;font-size:14px;border-bottom:1px solid var(--border)}
-  tr:hover td{background:rgba(108,99,255,.05)}
-  .badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
-  .badge-in{background:rgba(102,187,106,.15);color:var(--success)}
-  .badge-out{background:rgba(239,83,80,.15);color:var(--danger)}
-  .badge-adj{background:rgba(79,195,247,.15);color:var(--accent2)}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
-  .modal-overlay.open{display:flex}
-  .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-  .modal h3{font-size:18px;font-weight:600;margin-bottom:20px}
-  .form-group{margin-bottom:16px}
-  .form-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  .form-group input,.form-group select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;outline:none}
-  .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end}
-  .login-card{max-width:400px;margin:80px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px}
-  .login-card h2{text-align:center;margin-bottom:28px}
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:14px;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:.3s}
-  .toast.show{transform:translateY(0);opacity:1}
-  .toast.success{border-color:var(--success);color:var(--success)}
-  .toast.error{border-color:var(--danger);color:var(--danger)}
-  .stat-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
-  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
-  .stat .label{font-size:13px;color:var(--muted);margin-bottom:8px}
-  .stat .value{font-size:28px;font-weight:700}
-  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
-  .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  select option{background:var(--card)}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #09090b;
+  --surface: #111113;
+  --surface-2: #1c1c1f;
+  --border: #27272a;
+  --border-subtle: #1c1c1f;
+  --fg: #fafafa;
+  --fg-muted: #71717a;
+  --fg-dim: #3f3f46;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-subtle: rgba(37,99,235,.1);
+  --success: #16a34a;
+  --success-subtle: rgba(22,163,74,.1);
+  --danger: #dc2626;
+  --danger-subtle: rgba(220,38,38,.1);
+  --warn: #d97706;
+  --warn-subtle: rgba(217,119,6,.1);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  min-height: 100%;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+aside {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 10;
+}
+
+.logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-text { font-weight: 700; font-size: 15px; letter-spacing: -.3px; }
+.logo-sub { font-size: 11px; color: var(--fg-muted); font-weight: 400; }
+
+nav { padding: 12px 10px; flex: 1; }
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  padding: 8px 10px 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  font-weight: 500;
+  margin-bottom: 2px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--fg); }
+.nav-item.active { background: var(--accent-subtle); color: var(--fg); }
+.nav-item.active svg { color: var(--accent); }
+.nav-item svg { flex-shrink: 0; }
+
+.sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+.status-dot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--fg-dim);
+  flex-shrink: 0;
+}
+.dot.online { background: var(--success); box-shadow: 0 0 0 3px var(--success-subtle); }
+
+/* ── Main ─────────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  margin-left: 220px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.page-header {
+  padding: 20px 28px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.4px;
+  margin-bottom: 16px;
+}
+.page-header h1 span { color: var(--fg-muted); font-weight: 400; }
+.header-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: -1px;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: var(--fg); }
+.tab-btn.active { color: var(--fg); border-bottom-color: var(--accent); }
+
+.page-body { padding: 24px 28px; flex: 1; overflow-y: auto; }
+
+/* ── Stats ────────────────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+.stat-card .label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.stat-card .value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-card .value.warn { color: var(--warn); }
+.stat-card .value.ok { color: var(--success); }
+
+/* ── Toolbar ──────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+.search-wrap input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 8px 12px 8px 34px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+}
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap input::placeholder { color: var(--fg-dim); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  transition: opacity .15s, background .15s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--fg-muted); }
+.btn-ghost:hover { color: var(--fg); opacity: 1; background: var(--surface-2); }
+.btn-danger { background: var(--danger-subtle); border: 1px solid rgba(220,38,38,.2); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; opacity: 1; }
+.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+.btn-icon { padding: 6px 7px; }
+
+/* ── Table ────────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead { border-bottom: 1px solid var(--border); }
+th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: var(--surface);
+}
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.td-name { font-weight: 500; }
+.td-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.td-qty {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 13px;
+}
+.td-qty.low { color: var(--danger); }
+.td-qty.ok { color: var(--success); }
+.td-price { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--fg-muted); }
+.td-actions { display: flex; gap: 6px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.badge-in { background: var(--success-subtle); color: var(--success); }
+.badge-out { background: var(--danger-subtle); color: var(--danger); }
+.badge-adj { background: var(--warn-subtle); color: var(--warn); }
+
+.product-thumb {
+  width: 34px; height: 34px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.product-thumb-placeholder {
+  width: 34px; height: 34px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.name-cell { display: flex; align-items: center; gap: 10px; }
+
+/* ── Empty / Loading ──────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--fg-muted);
+}
+.empty-state p { font-size: 13px; margin-top: 6px; }
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border-subtle) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 5px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ── Sections ─────────────────────────────────────────────────── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Modal ────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-header h2 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+.close-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--fg-muted); padding: 4px; border-radius: 6px;
+}
+.close-btn:hover { color: var(--fg); background: var(--surface-2); }
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  margin-bottom: 5px;
+}
+.form-input, .form-select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--fg-dim); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-footer {
+  display: flex; gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+.form-select option { background: var(--surface); }
+
+/* ── Login ────────────────────────────────────────────────────── */
+.login-wrap {
+  max-width: 360px;
+  margin: 48px auto;
+}
+.login-wrap h2 { font-size: 20px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 6px; }
+.login-wrap p { color: var(--fg-muted); font-size: 13px; margin-bottom: 24px; }
+
+/* ── Toast ────────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  transform: translateX(120%);
+  transition: transform .25s cubic-bezier(.22,.68,0,1.2);
+  pointer-events: all;
+  max-width: 300px;
+}
+.toast.in { transform: translateX(0); }
+.toast.success { border-color: rgba(22,163,74,.4); }
+.toast.error { border-color: rgba(220,38,38,.4); }
+.toast .t-icon { flex-shrink: 0; }
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Admin panel ──────────────────────────────────────────────── */
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.info-card .label { font-size: 11.5px; color: var(--fg-muted); font-weight: 500; margin-bottom: 4px; }
+.info-card .val { font-size: 15px; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<header>
-  <div style="width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>
-  <h1>StockMaster</h1>
-  <span id="serverStatus"></span>
-  <nav>
-    <button class="active" onclick="showSection('estoque',this)">Estoque</button>
-    <button onclick="showSection('transacoes',this)">Transações</button>
-    <button onclick="showSection('admin',this)" id="adminTabBtn">Admin</button>
-  </nav>
-</header>
+<!-- Sidebar -->
+<aside>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        <path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">StockMaster</div>
+      <div class="logo-sub">Gestão de Estoque</div>
+    </div>
+  </div>
 
+  <nav>
+    <div class="nav-label">Estoque</div>
+    <button class="nav-item active" onclick="goto('produtos', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      Produtos
+    </button>
+    <button class="nav-item" onclick="goto('transacoes', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Transações
+    </button>
+
+    <div class="nav-label" style="margin-top:12px">Sistema</div>
+    <button class="nav-item" onclick="goto('admin', this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+      Administração
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-dot">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Verificando...</span>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
 <main>
 
-<!-- ESTOQUE -->
-<div class="section active" id="estoque">
-  <div class="stat-bar" id="statBar">
-    <div class="stat"><div class="label">Total de Itens</div><div class="value" id="statTotal">—</div></div>
-    <div class="stat"><div class="label">Estoque Baixo (&lt;5)</div><div class="value" id="statLow" style="color:var(--danger)">—</div></div>
-    <div class="stat"><div class="label">Categorias</div><div class="value" id="statCats">—</div></div>
-  </div>
-  <div class="toolbar">
-    <input type="text" id="search" placeholder="🔍  Buscar produto..." oninput="filterProducts()">
-    <button class="btn btn-primary" onclick="openModal()">+ Novo Produto</button>
-    <button class="btn btn-ghost" onclick="loadProducts()">↻ Atualizar</button>
-  </div>
-  <div class="grid" id="productGrid"><div class="empty"><div class="spinner"></div></div></div>
-</div>
-
-<!-- TRANSAÇÕES -->
-<div class="section" id="transacoes">
-  <div class="toolbar">
-    <h2 style="margin:0">Últimas Transações</h2>
-    <button class="btn btn-ghost" onclick="loadTransactions()" style="margin-left:auto">↻ Atualizar</button>
-  </div>
-  <table>
-    <thead><tr><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Data</th></tr></thead>
-    <tbody id="transTable"><tr><td colspan="4" class="empty"><div class="spinner"></div></td></tr></tbody>
-  </table>
-</div>
-
-<!-- ADMIN -->
-<div class="section" id="admin">
-  <div id="loginForm" class="login-card">
-    <h2>🔐 Login Admin</h2>
-    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@conexaobr277.com.br"></div>
-    <div class="form-group"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()">Entrar</button>
-  </div>
-  <div id="adminPanel" style="display:none">
-    <div class="toolbar">
-      <h2 style="margin:0">Painel Administrativo</h2>
-      <button class="btn btn-ghost" style="margin-left:auto" onclick="doLogout()">Sair</button>
+  <!-- PRODUTOS -->
+  <div id="page-produtos" class="section active">
+    <div class="page-header">
+      <h1>Produtos <span>/ Estoque</span></h1>
+      <div class="header-tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'tab-lista')">Lista</button>
+        <button class="tab-btn" onclick="switchTab(this, 'tab-cards')">Cards</button>
+      </div>
     </div>
-    <div class="stat-bar">
-      <div class="stat"><div class="label">Usuário</div><div class="value" id="adminUser" style="font-size:16px">—</div></div>
-      <div class="stat"><div class="label">Perfil</div><div class="value" id="adminRole" style="font-size:16px">—</div></div>
+    <div class="page-body">
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="label">Total de Itens</div><div class="value" id="statTotal">—</div></div>
+        <div class="stat-card"><div class="label">Estoque Baixo</div><div class="value warn" id="statLow">—</div></div>
+        <div class="stat-card"><div class="label">Valor em Estoque</div><div class="value ok" id="statVal">—</div></div>
+        <div class="stat-card"><div class="label">Modos</div><div class="value" id="statModos">—</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar por nome ou código..." oninput="filterProducts()">
+        </div>
+        <button class="btn btn-ghost" onclick="loadProducts()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          Atualizar
+        </button>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Novo Produto
+        </button>
+      </div>
+
+      <!-- Tab: Lista -->
+      <div id="tab-lista">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Código</th>
+                <th>Qtd.</th>
+                <th>Custo</th>
+                <th>Venda</th>
+                <th>Modo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="productTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Cards -->
+      <div id="tab-cards" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px" id="productCards"></div>
+      </div>
     </div>
-    <h3 style="margin-bottom:16px">Pedidos Recentes</h3>
-    <table>
-      <thead><tr><th>Nº</th><th>Cliente</th><th>Status</th><th>Entregador</th><th>Data</th></tr></thead>
-      <tbody id="pedidosTable"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
-    </table>
   </div>
-</div>
+
+  <!-- TRANSAÇÕES -->
+  <div id="page-transacoes" class="section">
+    <div class="page-header">
+      <h1>Transações <span>/ Histórico</span></h1>
+    </div>
+    <div class="page-body">
+      <div class="toolbar">
+        <div style="flex:1"></div>
+        <button class="btn btn-ghost" onclick="loadTransactions()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          Atualizar
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Data e Hora</th></tr>
+          </thead>
+          <tbody id="transTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="page-admin" class="section">
+    <div class="page-header">
+      <h1>Administração <span>/ Acesso restrito</span></h1>
+    </div>
+    <div class="page-body">
+      <div id="loginWrap" class="login-wrap">
+        <h2>Entrar</h2>
+        <p>Acesse o painel administrativo com suas credenciais.</p>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="loginEmail" type="email" value="admin@conexaobr277.com.br">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <input class="form-input" id="loginPass" type="password" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
+          Entrar
+        </button>
+      </div>
+
+      <div id="adminPanel" style="display:none">
+        <div class="toolbar" style="margin-bottom:20px">
+          <div class="info-row" style="flex:1;margin-bottom:0">
+            <div class="info-card"><div class="label">Usuário</div><div class="val" id="aUser">—</div></div>
+            <div class="info-card"><div class="label">Perfil</div><div class="val" id="aRole">—</div></div>
+          </div>
+          <button class="btn btn-ghost" style="margin-left:12px;align-self:flex-start" onclick="doLogout()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+
+        <div style="font-size:13px;color:var(--fg-muted);margin-bottom:14px;font-weight:500">Pedidos recentes</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Destinatário</th><th>Status</th><th>Entregador</th><th>Data</th></tr>
+            </thead>
+            <tbody id="pedidosTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </main>
 
-<!-- MODAL PRODUTO -->
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+<!-- Modal Produto -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h3 id="modalTitle">Novo Produto</h3>
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Produto</h2>
+      <button class="close-btn" onclick="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
     <input type="hidden" id="editId">
-    <div class="form-group"><label>Nome *</label><input id="fNome" placeholder="Nome do produto"></div>
-    <div class="form-row">
-      <div class="form-group"><label>Quantidade</label><input id="fQtd" type="number" value="0" min="0"></div>
+    <div class="form-group">
+      <label class="form-label">Nome *</label>
+      <input class="form-input" id="fNome" placeholder="Nome do produto">
+    </div>
+    <div class="form-grid">
       <div class="form-group">
-        <label>Modo Estocagem</label>
-        <select id="fModo">
+        <label class="form-label">Quantidade</label>
+        <input class="form-input" id="fQtd" type="number" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Modo de Estocagem</label>
+        <select class="form-select" id="fModo">
           <option value="">Selecionar</option>
-          <option value="UNIDADE">Unidade</option>
-          <option value="CAIXA">Caixa</option>
-          <option value="KG">Kg</option>
-          <option value="LITRO">Litro</option>
-          <option value="METRO">Metro</option>
+          <option>UNIDADE</option>
+          <option>CAIXA</option>
+          <option>KG</option>
+          <option>LITRO</option>
+          <option>METRO</option>
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>Custo (R$)</label><input id="fCusto" type="number" step="0.01" min="0" placeholder="0,00"></div>
-      <div class="form-group"><label>Preço Venda (R$)</label><input id="fPreco" type="number" step="0.01" min="0" placeholder="0,00"></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Custo (R$)</label>
+        <input class="form-input" id="fCusto" type="number" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preço de Venda (R$)</label>
+        <input class="form-input" id="fPreco" type="number" step="0.01" min="0" placeholder="0,00">
+      </div>
     </div>
-    <div class="form-group"><label>Código de Barras</label><input id="fBarcode" placeholder="EAN-13"></div>
-    <div class="form-group"><label>URL da Imagem</label><input id="fFoto" placeholder="https://..."></div>
-    <div class="modal-actions">
+    <div class="form-group">
+      <label class="form-label">Código de Barras</label>
+      <input class="form-input" id="fBarcode" placeholder="EAN-13 ou interno">
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL da Imagem</label>
+      <input class="form-input" id="fFoto" placeholder="https://...">
+    </div>
+    <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProduct()">Salvar</button>
+      <button class="btn btn-primary" onclick="saveProduct()" id="saveBtn">Salvar</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
 const BASE = '';
 let allProducts = [];
 let token = localStorage.getItem('sm_token') || '';
+let currentTab = 'lista';
 
-// ── Util ──────────────────────────────────────────────────────────────────────
-function toast(msg, type='success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show ' + type;
-  setTimeout(() => el.className = 'toast', 3000);
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = type === 'success'
+    ? `<svg class="t-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg class="t-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`;
+  el.innerHTML = icon + msg;
+  c.appendChild(el);
+  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('in')); });
+  setTimeout(() => {
+    el.classList.remove('in');
+    setTimeout(() => el.remove(), 300);
+  }, 3200);
 }
 
-function fmt(n) { return parseFloat(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
-function fmtDate(s) { return s ? new Date(s).toLocaleString('pt-BR') : '—'; }
+// ── Format ─────────────────────────────────────────────────────
+function fmt(n) { return n != null ? 'R$ ' + parseFloat(n).toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—'; }
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
 
-// ── Navigation ────────────────────────────────────────────────────────────────
-function showSection(id, btn) {
+// ── Nav ────────────────────────────────────────────────────────
+function goto(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
   btn.classList.add('active');
   if (id === 'transacoes') loadTransactions();
   if (id === 'admin' && token) showAdminPanel();
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-lista').style.display = tabId === 'tab-lista' ? '' : 'none';
+  document.getElementById('tab-cards').style.display = tabId === 'tab-cards' ? '' : 'none';
+  currentTab = tabId === 'tab-lista' ? 'lista' : 'cards';
+  renderProducts(allProducts);
+}
+
+// ── Status ─────────────────────────────────────────────────────
 async function checkStatus() {
   try {
     const r = await fetch(BASE + '/api/health');
-    const d = await r.json();
-    document.getElementById('serverStatus').textContent = '● Online';
-    document.getElementById('serverStatus').style.color = '#66bb6a';
+    if (r.ok) {
+      document.getElementById('statusDot').classList.add('online');
+      document.getElementById('statusText').textContent = 'Servidor online';
+    } else throw new Error();
   } catch {
-    document.getElementById('serverStatus').textContent = '● Offline';
-    document.getElementById('serverStatus').style.color = '#ef5350';
+    document.getElementById('statusText').textContent = 'Sem conexão';
   }
 }
 
-// ── Products ──────────────────────────────────────────────────────────────────
+// ── Products ───────────────────────────────────────────────────
 async function loadProducts() {
-  document.getElementById('productGrid').innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  showTableSkeleton('productTable', 7);
   try {
     const r = await fetch(BASE + '/api/stock/products');
     const d = await r.json();
     allProducts = d.products || [];
     renderProducts(allProducts);
     updateStats(allProducts);
-  } catch(e) {
-    document.getElementById('productGrid').innerHTML = '<div class="empty">Erro ao carregar produtos. Verifique o servidor.</div>';
-    toast('Erro ao conectar com o servidor', 'error');
+  } catch {
+    document.getElementById('productTable').innerHTML = emptyRow('Erro ao carregar produtos. Verifique a conexão.', 7);
+    toast('Falha ao conectar com o servidor', 'error');
   }
 }
 
-function updateStats(products) {
-  document.getElementById('statTotal').textContent = products.length;
-  document.getElementById('statLow').textContent = products.filter(p => p.quantidade < 5).length;
-  const cats = new Set(products.map(p => p.modo_estocagem).filter(Boolean));
-  document.getElementById('statCats').textContent = cats.size || '—';
+function updateStats(list) {
+  document.getElementById('statTotal').textContent = list.length;
+  document.getElementById('statLow').textContent = list.filter(p => p.quantidade < 5).length;
+  const total = list.reduce((s, p) => s + (p.custo || 0) * (p.quantidade || 0), 0);
+  document.getElementById('statVal').textContent = total > 0 ? 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—';
+  const modos = new Set(list.map(p => p.modo_estocagem).filter(Boolean));
+  document.getElementById('statModos').textContent = modos.size || '—';
 }
 
 function filterProducts() {
-  const q = document.getElementById('search').value.toLowerCase();
-  const filtered = allProducts.filter(p =>
-    p.nome.toLowerCase().includes(q) ||
-    (p.barcode||'').toLowerCase().includes(q)
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const f = allProducts.filter(p =>
+    p.nome.toLowerCase().includes(q) || (p.barcode||'').toLowerCase().includes(q)
   );
-  renderProducts(filtered);
+  renderProducts(f);
 }
 
 function renderProducts(list) {
-  if (!list.length) {
-    document.getElementById('productGrid').innerHTML = '<div class="empty">Nenhum produto encontrado.</div>';
-    return;
+  if (currentTab === 'lista') {
+    if (!list.length) {
+      document.getElementById('productTable').innerHTML = emptyRow('Nenhum produto encontrado.', 7);
+      return;
+    }
+    document.getElementById('productTable').innerHTML = list.map(p => `
+      <tr>
+        <td>
+          <div class="name-cell">
+            ${p.foto_url
+              ? `<img class="product-thumb" src="${p.foto_url}" alt="" onerror="this.style.display='none'">`
+              : `<div class="product-thumb-placeholder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--fg-dim)"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg></div>`}
+            <span class="td-name">${esc(p.nome)}</span>
+          </div>
+        </td>
+        <td><span class="td-code">${p.barcode || '—'}</span></td>
+        <td><span class="td-qty ${p.quantidade < 5 ? 'low' : 'ok'}">${p.quantidade}</span></td>
+        <td class="td-price">${p.custo != null ? fmt(p.custo) : '—'}</td>
+        <td class="td-price">${p.preco_venda != null ? fmt(p.preco_venda) : '—'}</td>
+        <td><span style="font-size:12px;color:var(--fg-muted)">${p.modo_estocagem || '—'}</span></td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-ghost btn-sm btn-icon" title="Editar" onclick='openModal(${JSON.stringify(p)})'>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-danger btn-sm btn-icon" title="Excluir" onclick="deleteProduct('${p.id}','${esc(p.nome)}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } else {
+    if (!list.length) {
+      document.getElementById('productCards').innerHTML = `<div class="empty-state" style="grid-column:1/-1">Nenhum produto encontrado.</div>`;
+      return;
+    }
+    document.getElementById('productCards').innerHTML = list.map(p => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;transition:border-color .15s"
+           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        ${p.foto_url
+          ? `<img src="${p.foto_url}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:7px;margin-bottom:10px;background:var(--surface-2)" onerror="this.style.display='none'">`
+          : `<div style="width:100%;height:120px;border-radius:7px;margin-bottom:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center">
+               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="color:var(--fg-dim)"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+             </div>`}
+        <div style="font-weight:600;font-size:13.5px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nome)}</div>
+        ${p.barcode ? `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-muted);margin-bottom:8px">${p.barcode}</div>` : '<div style="margin-bottom:8px"></div>'}
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:${p.quantidade < 5 ? 'var(--danger)' : 'var(--success)'};margin-bottom:2px">${p.quantidade}</div>
+        <div style="font-size:11.5px;color:var(--fg-muted);margin-bottom:10px">${p.modo_estocagem || 'unid.'}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick='openModal(${JSON.stringify(p)})'>Editar</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProduct('${p.id}','${esc(p.nome)}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
   }
-  document.getElementById('productGrid').innerHTML = list.map(p => `
-    <div class="card">
-      ${p.foto_url
-        ? `<img class="card-img" src="${p.foto_url}" alt="${p.nome}" onerror="this.style.display='none'">`
-        : `<div class="card-img-placeholder">📦</div>`}
-      <h3 title="${p.nome}">${p.nome}</h3>
-      ${p.barcode ? `<div class="barcode">🔳 ${p.barcode}</div>` : ''}
-      <div class="stock ${p.quantidade < 5 ? 'low' : ''}">${p.quantidade} ${p.modo_estocagem||'un.'}</div>
-      <div class="price">
-        ${p.custo ? `Custo: R$ ${fmt(p.custo)}` : ''}
-        ${p.preco_venda ? ` &nbsp;·&nbsp; Venda: R$ ${fmt(p.preco_venda)}` : ''}
-      </div>
-      <div class="card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️ Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}','${p.nome}')">🗑️</button>
-      </div>
-    </div>
-  `).join('');
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
+// ── Skeleton ───────────────────────────────────────────────────
+function showTableSkeleton(tbodyId, cols) {
+  const rows = Array(6).fill(0).map(() =>
+    `<tr>${Array(cols).fill(0).map(() =>
+      `<td><div class="skeleton" style="height:14px;width:${40+Math.random()*50}%"></div></td>`
+    ).join('')}</tr>`
+  ).join('');
+  document.getElementById(tbodyId).innerHTML = rows;
+}
+
+function emptyRow(msg, cols) {
+  return `<tr><td colspan="${cols}"><div class="empty-state">${msg}</div></td></tr>`;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Modal ──────────────────────────────────────────────────────
 function openModal(p) {
   document.getElementById('modalTitle').textContent = p ? 'Editar Produto' : 'Novo Produto';
   document.getElementById('editId').value = p ? p.id : '';
   document.getElementById('fNome').value = p ? p.nome : '';
   document.getElementById('fQtd').value = p ? p.quantidade : 0;
-  document.getElementById('fModo').value = p ? (p.modo_estocagem||'') : '';
-  document.getElementById('fCusto').value = p ? (p.custo||'') : '';
-  document.getElementById('fPreco').value = p ? (p.preco_venda||'') : '';
-  document.getElementById('fBarcode').value = p ? (p.barcode||'') : '';
-  document.getElementById('fFoto').value = p ? (p.foto_url||'') : '';
-  document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('fNome').focus();
+  document.getElementById('fModo').value = p ? (p.modo_estocagem || '') : '';
+  document.getElementById('fCusto').value = p ? (p.custo ?? '') : '';
+  document.getElementById('fPreco').value = p ? (p.preco_venda ?? '') : '';
+  document.getElementById('fBarcode').value = p ? (p.barcode || '') : '';
+  document.getElementById('fFoto').value = p ? (p.foto_url || '') : '';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('fNome').focus(), 50);
 }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 async function saveProduct() {
   const id = document.getElementById('editId').value;
   const nome = document.getElementById('fNome').value.trim();
   if (!nome) { toast('Nome é obrigatório', 'error'); return; }
 
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Salvando...';
+
   const body = {
     nome,
     quantidade: parseFloat(document.getElementById('fQtd').value) || 0,
     modo_estocagem: document.getElementById('fModo').value || null,
-    custo: parseFloat(document.getElementById('fCusto').value) || null,
-    preco_venda: parseFloat(document.getElementById('fPreco').value) || null,
+    custo: document.getElementById('fCusto').value !== '' ? parseFloat(document.getElementById('fCusto').value) : null,
+    preco_venda: document.getElementById('fPreco').value !== '' ? parseFloat(document.getElementById('fPreco').value) : null,
     barcode: document.getElementById('fBarcode').value.trim() || null,
     foto_url: document.getElementById('fFoto').value.trim() || null,
   };
 
   try {
     const url = id ? `${BASE}/api/stock/products/${id}` : `${BASE}/api/stock/products`;
-    const method = id ? 'PUT' : 'POST';
-    const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const r = await fetch(url, { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await r.json();
-    if (!d.success) throw new Error(d.error);
-    toast(id ? 'Produto atualizado!' : 'Produto criado!');
+    if (!d.success) throw new Error(d.error || 'Erro desconhecido');
+    toast(id ? 'Produto atualizado com sucesso' : 'Produto criado com sucesso');
     closeModal();
     loadProducts();
   } catch(e) {
     toast('Erro: ' + e.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Salvar';
   }
 }
 
@@ -326,35 +945,37 @@ async function deleteProduct(id, nome) {
     toast('Produto excluído');
     loadProducts();
   } catch(e) {
-    toast('Erro: ' + e.message, 'error');
+    toast('Erro ao excluir: ' + e.message, 'error');
   }
 }
 
-// ── Transactions ──────────────────────────────────────────────────────────────
+// ── Transactions ───────────────────────────────────────────────
 async function loadTransactions() {
-  document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty"><div class="spinner"></div></td></tr>';
+  showTableSkeleton('transTable', 4);
   try {
     const r = await fetch(BASE + '/api/stock/transactions');
     const d = await r.json();
     const list = d.transactions || [];
     if (!list.length) {
-      document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty">Nenhuma transação encontrada.</td></tr>';
+      document.getElementById('transTable').innerHTML = emptyRow('Nenhuma transação registrada.', 4);
       return;
     }
+    const tipoLabel = {INBOUND:'Entrada', OUTBOUND:'Saída', ADJUSTMENT:'Ajuste'};
+    const tipoClass = {INBOUND:'badge-in', OUTBOUND:'badge-out', ADJUSTMENT:'badge-adj'};
     document.getElementById('transTable').innerHTML = list.map(t => `
       <tr>
-        <td>${t.item_name || '—'}</td>
-        <td><span class="badge ${t.tipo==='INBOUND'?'badge-in':t.tipo==='OUTBOUND'?'badge-out':'badge-adj'}">${t.tipo==='INBOUND'?'Entrada':t.tipo==='OUTBOUND'?'Saída':'Ajuste'}</span></td>
-        <td>${t.quantidade}</td>
-        <td>${fmtDate(t.data_hora)}</td>
+        <td class="td-name">${esc(t.item_name || '—')}</td>
+        <td><span class="badge ${tipoClass[t.tipo]||'badge-adj'}">${tipoLabel[t.tipo]||t.tipo||'—'}</span></td>
+        <td><span class="td-qty" style="font-size:13px">${t.quantidade}</span></td>
+        <td style="color:var(--fg-muted);font-size:13px">${fmtDate(t.data_hora)}</td>
       </tr>
     `).join('');
-  } catch(e) {
-    document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty">Erro ao carregar transações.</td></tr>';
+  } catch {
+    document.getElementById('transTable').innerHTML = emptyRow('Erro ao carregar transações.', 4);
   }
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth ───────────────────────────────────────────────────────
 async function doLogin() {
   const email = document.getElementById('loginEmail').value;
   const senha = document.getElementById('loginPass').value;
@@ -365,28 +986,26 @@ async function doLogin() {
       body: JSON.stringify({ email, senha })
     });
     const d = await r.json();
-    if (!r.ok || !d.token) throw new Error(d.message || 'Login inválido');
+    if (!r.ok || !d.token) throw new Error(d.message || 'Credenciais inválidas');
     token = d.token;
     localStorage.setItem('sm_token', token);
     showAdminPanel(d.usuario);
-    toast('Login realizado com sucesso!');
+    toast('Bem-vindo ao painel');
   } catch(e) {
-    toast('Erro: ' + e.message, 'error');
+    toast(e.message, 'error');
   }
 }
 
 function doLogout() {
   token = '';
   localStorage.removeItem('sm_token');
-  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('loginWrap').style.display = '';
   document.getElementById('adminPanel').style.display = 'none';
-  toast('Sessão encerrada');
 }
 
 async function showAdminPanel(user) {
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('adminPanel').style.display = 'block';
-
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('adminPanel').style.display = '';
   if (!user) {
     try {
       const r = await fetch(BASE + '/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
@@ -394,43 +1013,51 @@ async function showAdminPanel(user) {
       user = d.usuario || d;
     } catch {}
   }
-
   if (user) {
-    document.getElementById('adminUser').textContent = user.nome || user.email || '—';
-    document.getElementById('adminRole').textContent = user.perfil || '—';
+    document.getElementById('aUser').textContent = user.nome || user.email || '—';
+    document.getElementById('aRole').textContent = user.perfil || '—';
   }
-
   loadPedidos();
 }
 
 async function loadPedidos() {
+  showTableSkeleton('pedidosTable', 5);
   try {
     const r = await fetch(BASE + '/api/pedidos', { headers: { Authorization: 'Bearer ' + token } });
     const d = await r.json();
     const list = Array.isArray(d) ? d : (d.pedidos || d.data || []);
     if (!list.length) {
-      document.getElementById('pedidosTable').innerHTML = '<tr><td colspan="5" class="empty">Nenhum pedido encontrado.</td></tr>';
+      document.getElementById('pedidosTable').innerHTML = emptyRow('Nenhum pedido encontrado.', 5);
       return;
     }
-    document.getElementById('pedidosTable').innerHTML = list.slice(0,20).map(p => `
+    document.getElementById('pedidosTable').innerHTML = list.slice(0, 25).map(p => `
       <tr>
-        <td>#${p.id}</td>
-        <td>${p.destinatario || p.cliente || '—'}</td>
-        <td><span class="badge badge-adj">${p.status || '—'}</span></td>
-        <td>${p.entregador?.nome || '—'}</td>
-        <td>${fmtDate(p.criado_em || p.createdAt)}</td>
+        <td class="td-code">#${p.id}</td>
+        <td class="td-name">${esc(p.destinatario || p.cliente || '—')}</td>
+        <td><span class="badge badge-adj">${esc(p.status || '—')}</span></td>
+        <td style="color:var(--fg-muted)">${esc(p.entregador?.nome || '—')}</td>
+        <td style="color:var(--fg-muted);font-size:13px">${fmtDate(p.criado_em || p.createdAt)}</td>
       </tr>
     `).join('');
-  } catch(e) {
-    document.getElementById('pedidosTable').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar pedidos.</td></tr>';
+  } catch {
+    document.getElementById('pedidosTable').innerHTML = emptyRow('Erro ao carregar pedidos.', 5);
   }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Keyboard shortcuts ──────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('searchInput')?.focus();
+  }
+});
+
+// ── Init ───────────────────────────────────────────────────────
 checkStatus();
 loadProducts();
 if (token) {
-  // auto restore admin session
+  const adminBtn = document.querySelector('.nav-item:last-child');
 }
 </script>
 </body>
