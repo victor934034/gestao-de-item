@@ -6,7 +6,7 @@
     </domain-config>
     <!-- Fallback HTTP direto ao IP (compatibilidade com APKs antigos) -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain>187.77.34.80</domain>
+        <domain includeSubdomains="false">187.77.34.80</domain>
     </domain-config>
     <!-- Tiny / Olist ERP -->
     <domain-config cleartextTrafficPermitted="false">
