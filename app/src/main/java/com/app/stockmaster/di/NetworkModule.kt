@@ -20,12 +20,9 @@ import javax.inject.Named
 object NetworkModule {
 
     private const val TINY_BASE_URL = "https://api.tiny.com.br/api2/"
-    // Unified Backend URL (Entrega + Gestão)
-    private const val BRIDGE_BASE_URL = "https://app-backend.zdc13k.easypanel.host/api/stock/"
+    // Backend unificado no servidor Hostinger / EasyPanel
+    private const val BRIDGE_BASE_URL = "https://gestao-de-item-gestao.mgf7wb.easypanel.host/api/stock/"
     private const val TINY_API_TOKEN = "fdaefe9956da9074686debb15db59aea775b89b04ea74cffc5e269dd2df3ed5b"
-    
-    // Supabase Credentials
-    private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoZ21pdHJ5Ymhtd3dpaHpub3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyMTMwNjcsImV4cCI6MjA4NDc4OTA2N30.hCu-znNbVmvuGujepYkKMuDHX28pC69YzZ3-zYMHU7c"
 
     @Provides
     @Singleton

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockMaster — Painel Web</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#6c63ff;--accent2:#4fc3f7;--danger:#ef5350;--success:#66bb6a;--text:#e0e0e0;--muted:#9e9e9e}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+  header h1{font-size:18px;font-weight:700;color:#fff}header span{font-size:13px;color:var(--muted)}
+  nav{display:flex;gap:4px;margin-left:auto}
+  nav button{background:none;border:none;color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;transition:.2s}
+  nav button.active,nav button:hover{background:var(--accent);color:#fff}
+  main{max-width:1200px;margin:0 auto;padding:24px}
+  .section{display:none}.section.active{display:block}
+  h2{font-size:20px;font-weight:600;margin-bottom:20px}
+  .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+  .toolbar input{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;outline:none}
+  .toolbar input:focus{border-color:var(--accent)}
+  .btn{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+  .btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
+  .btn-ghost{background:var(--border);color:var(--text)}.btn-ghost:hover{background:var(--accent);color:#fff}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:.2s}
+  .card:hover{border-color:var(--accent)}
+  .card-img{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:12px;background:var(--border)}
+  .card-img-placeholder{width:100%;height:140px;border-radius:8px;margin-bottom:12px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:40px}
+  .card h3{font-size:15px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .barcode{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .card .stock{font-size:22px;font-weight:700;color:var(--accent2);margin-bottom:4px}
+  .card .stock.low{color:var(--danger)}
+  .card .price{font-size:13px;color:var(--muted)}
+  .card-actions{display:flex;gap:8px;margin-top:12px}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;padding:12px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+  td{padding:12px 16px;font-size:14px;border-bottom:1px solid var(--border)}
+  tr:hover td{background:rgba(108,99,255,.05)}
+  .badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
+  .badge-in{background:rgba(102,187,106,.15);color:var(--success)}
+  .badge-out{background:rgba(239,83,80,.15);color:var(--danger)}
+  .badge-adj{background:rgba(79,195,247,.15);color:var(--accent2)}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+  .modal h3{font-size:18px;font-weight:600;margin-bottom:20px}
+  .form-group{margin-bottom:16px}
+  .form-group label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .form-group input,.form-group select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;outline:none}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end}
+  .login-card{max-width:400px;margin:80px auto;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px}
+  .login-card h2{text-align:center;margin-bottom:28px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:14px;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.4);transform:translateY(100px);opacity:0;transition:.3s}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.success{border-color:var(--success);color:var(--success)}
+  .toast.error{border-color:var(--danger);color:var(--danger)}
+  .stat-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .stat .label{font-size:13px;color:var(--muted);margin-bottom:8px}
+  .stat .value{font-size:28px;font-weight:700}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  select option{background:var(--card)}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>
+  <h1>StockMaster</h1>
+  <span id="serverStatus"></span>
+  <nav>
+    <button class="active" onclick="showSection('estoque',this)">Estoque</button>
+    <button onclick="showSection('transacoes',this)">Transações</button>
+    <button onclick="showSection('admin',this)" id="adminTabBtn">Admin</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ESTOQUE -->
+<div class="section active" id="estoque">
+  <div class="stat-bar" id="statBar">
+    <div class="stat"><div class="label">Total de Itens</div><div class="value" id="statTotal">—</div></div>
+    <div class="stat"><div class="label">Estoque Baixo (&lt;5)</div><div class="value" id="statLow" style="color:var(--danger)">—</div></div>
+    <div class="stat"><div class="label">Categorias</div><div class="value" id="statCats">—</div></div>
+  </div>
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍  Buscar produto..." oninput="filterProducts()">
+    <button class="btn btn-primary" onclick="openModal()">+ Novo Produto</button>
+    <button class="btn btn-ghost" onclick="loadProducts()">↻ Atualizar</button>
+  </div>
+  <div class="grid" id="productGrid"><div class="empty"><div class="spinner"></div></div></div>
+</div>
+
+<!-- TRANSAÇÕES -->
+<div class="section" id="transacoes">
+  <div class="toolbar">
+    <h2 style="margin:0">Últimas Transações</h2>
+    <button class="btn btn-ghost" onclick="loadTransactions()" style="margin-left:auto">↻ Atualizar</button>
+  </div>
+  <table>
+    <thead><tr><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Data</th></tr></thead>
+    <tbody id="transTable"><tr><td colspan="4" class="empty"><div class="spinner"></div></td></tr></tbody>
+  </table>
+</div>
+
+<!-- ADMIN -->
+<div class="section" id="admin">
+  <div id="loginForm" class="login-card">
+    <h2>🔐 Login Admin</h2>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" value="admin@conexaobr277.com.br"></div>
+    <div class="form-group"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()">Entrar</button>
+  </div>
+  <div id="adminPanel" style="display:none">
+    <div class="toolbar">
+      <h2 style="margin:0">Painel Administrativo</h2>
+      <button class="btn btn-ghost" style="margin-left:auto" onclick="doLogout()">Sair</button>
+    </div>
+    <div class="stat-bar">
+      <div class="stat"><div class="label">Usuário</div><div class="value" id="adminUser" style="font-size:16px">—</div></div>
+      <div class="stat"><div class="label">Perfil</div><div class="value" id="adminRole" style="font-size:16px">—</div></div>
+    </div>
+    <h3 style="margin-bottom:16px">Pedidos Recentes</h3>
+    <table>
+      <thead><tr><th>Nº</th><th>Cliente</th><th>Status</th><th>Entregador</th><th>Data</th></tr></thead>
+      <tbody id="pedidosTable"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<!-- MODAL PRODUTO -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle">Novo Produto</h3>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label>Nome *</label><input id="fNome" placeholder="Nome do produto"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Quantidade</label><input id="fQtd" type="number" value="0" min="0"></div>
+      <div class="form-group">
+        <label>Modo Estocagem</label>
+        <select id="fModo">
+          <option value="">Selecionar</option>
+          <option value="UNIDADE">Unidade</option>
+          <option value="CAIXA">Caixa</option>
+          <option value="KG">Kg</option>
+          <option value="LITRO">Litro</option>
+          <option value="METRO">Metro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Custo (R$)</label><input id="fCusto" type="number" step="0.01" min="0" placeholder="0,00"></div>
+      <div class="form-group"><label>Preço Venda (R$)</label><input id="fPreco" type="number" step="0.01" min="0" placeholder="0,00"></div>
+    </div>
+    <div class="form-group"><label>Código de Barras</label><input id="fBarcode" placeholder="EAN-13"></div>
+    <div class="form-group"><label>URL da Imagem</label><input id="fFoto" placeholder="https://..."></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE = '';
+let allProducts = [];
+let token = localStorage.getItem('sm_token') || '';
+
+// ── Util ──────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+function fmt(n) { return parseFloat(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2}); }
+function fmtDate(s) { return s ? new Date(s).toLocaleString('pt-BR') : '—'; }
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'transacoes') loadTransactions();
+  if (id === 'admin' && token) showAdminPanel();
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+async function checkStatus() {
+  try {
+    const r = await fetch(BASE + '/api/health');
+    const d = await r.json();
+    document.getElementById('serverStatus').textContent = '● Online';
+    document.getElementById('serverStatus').style.color = '#66bb6a';
+  } catch {
+    document.getElementById('serverStatus').textContent = '● Offline';
+    document.getElementById('serverStatus').style.color = '#ef5350';
+  }
+}
+
+// ── Products ──────────────────────────────────────────────────────────────────
+async function loadProducts() {
+  document.getElementById('productGrid').innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await fetch(BASE + '/api/stock/products');
+    const d = await r.json();
+    allProducts = d.products || [];
+    renderProducts(allProducts);
+    updateStats(allProducts);
+  } catch(e) {
+    document.getElementById('productGrid').innerHTML = '<div class="empty">Erro ao carregar produtos. Verifique o servidor.</div>';
+    toast('Erro ao conectar com o servidor', 'error');
+  }
+}
+
+function updateStats(products) {
+  document.getElementById('statTotal').textContent = products.length;
+  document.getElementById('statLow').textContent = products.filter(p => p.quantidade < 5).length;
+  const cats = new Set(products.map(p => p.modo_estocagem).filter(Boolean));
+  document.getElementById('statCats').textContent = cats.size || '—';
+}
+
+function filterProducts() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = allProducts.filter(p =>
+    p.nome.toLowerCase().includes(q) ||
+    (p.barcode||'').toLowerCase().includes(q)
+  );
+  renderProducts(filtered);
+}
+
+function renderProducts(list) {
+  if (!list.length) {
+    document.getElementById('productGrid').innerHTML = '<div class="empty">Nenhum produto encontrado.</div>';
+    return;
+  }
+  document.getElementById('productGrid').innerHTML = list.map(p => `
+    <div class="card">
+      ${p.foto_url
+        ? `<img class="card-img" src="${p.foto_url}" alt="${p.nome}" onerror="this.style.display='none'">`
+        : `<div class="card-img-placeholder">📦</div>`}
+      <h3 title="${p.nome}">${p.nome}</h3>
+      ${p.barcode ? `<div class="barcode">🔳 ${p.barcode}</div>` : ''}
+      <div class="stock ${p.quantidade < 5 ? 'low' : ''}">${p.quantidade} ${p.modo_estocagem||'un.'}</div>
+      <div class="price">
+        ${p.custo ? `Custo: R$ ${fmt(p.custo)}` : ''}
+        ${p.preco_venda ? ` &nbsp;·&nbsp; Venda: R$ ${fmt(p.preco_venda)}` : ''}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}','${p.nome}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(p) {
+  document.getElementById('modalTitle').textContent = p ? 'Editar Produto' : 'Novo Produto';
+  document.getElementById('editId').value = p ? p.id : '';
+  document.getElementById('fNome').value = p ? p.nome : '';
+  document.getElementById('fQtd').value = p ? p.quantidade : 0;
+  document.getElementById('fModo').value = p ? (p.modo_estocagem||'') : '';
+  document.getElementById('fCusto').value = p ? (p.custo||'') : '';
+  document.getElementById('fPreco').value = p ? (p.preco_venda||'') : '';
+  document.getElementById('fBarcode').value = p ? (p.barcode||'') : '';
+  document.getElementById('fFoto').value = p ? (p.foto_url||'') : '';
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('fNome').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+async function saveProduct() {
+  const id = document.getElementById('editId').value;
+  const nome = document.getElementById('fNome').value.trim();
+  if (!nome) { toast('Nome é obrigatório', 'error'); return; }
+
+  const body = {
+    nome,
+    quantidade: parseFloat(document.getElementById('fQtd').value) || 0,
+    modo_estocagem: document.getElementById('fModo').value || null,
+    custo: parseFloat(document.getElementById('fCusto').value) || null,
+    preco_venda: parseFloat(document.getElementById('fPreco').value) || null,
+    barcode: document.getElementById('fBarcode').value.trim() || null,
+    foto_url: document.getElementById('fFoto').value.trim() || null,
+  };
+
+  try {
+    const url = id ? `${BASE}/api/stock/products/${id}` : `${BASE}/api/stock/products`;
+    const method = id ? 'PUT' : 'POST';
+    const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error);
+    toast(id ? 'Produto atualizado!' : 'Produto criado!');
+    closeModal();
+    loadProducts();
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function deleteProduct(id, nome) {
+  if (!confirm(`Excluir "${nome}"?`)) return;
+  try {
+    const r = await fetch(`${BASE}/api/stock/products/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error);
+    toast('Produto excluído');
+    loadProducts();
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ── Transactions ──────────────────────────────────────────────────────────────
+async function loadTransactions() {
+  document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty"><div class="spinner"></div></td></tr>';
+  try {
+    const r = await fetch(BASE + '/api/stock/transactions');
+    const d = await r.json();
+    const list = d.transactions || [];
+    if (!list.length) {
+      document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty">Nenhuma transação encontrada.</td></tr>';
+      return;
+    }
+    document.getElementById('transTable').innerHTML = list.map(t => `
+      <tr>
+        <td>${t.item_name || '—'}</td>
+        <td><span class="badge ${t.tipo==='INBOUND'?'badge-in':t.tipo==='OUTBOUND'?'badge-out':'badge-adj'}">${t.tipo==='INBOUND'?'Entrada':t.tipo==='OUTBOUND'?'Saída':'Ajuste'}</span></td>
+        <td>${t.quantidade}</td>
+        <td>${fmtDate(t.data_hora)}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('transTable').innerHTML = '<tr><td colspan="4" class="empty">Erro ao carregar transações.</td></tr>';
+  }
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const senha = document.getElementById('loginPass').value;
+  try {
+    const r = await fetch(BASE + '/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, senha })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.token) throw new Error(d.message || 'Login inválido');
+    token = d.token;
+    localStorage.setItem('sm_token', token);
+    showAdminPanel(d.usuario);
+    toast('Login realizado com sucesso!');
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+
+function doLogout() {
+  token = '';
+  localStorage.removeItem('sm_token');
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('adminPanel').style.display = 'none';
+  toast('Sessão encerrada');
+}
+
+async function showAdminPanel(user) {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'block';
+
+  if (!user) {
+    try {
+      const r = await fetch(BASE + '/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+      const d = await r.json();
+      user = d.usuario || d;
+    } catch {}
+  }
+
+  if (user) {
+    document.getElementById('adminUser').textContent = user.nome || user.email || '—';
+    document.getElementById('adminRole').textContent = user.perfil || '—';
+  }
+
+  loadPedidos();
+}
+
+async function loadPedidos() {
+  try {
+    const r = await fetch(BASE + '/api/pedidos', { headers: { Authorization: 'Bearer ' + token } });
+    const d = await r.json();
+    const list = Array.isArray(d) ? d : (d.pedidos || d.data || []);
+    if (!list.length) {
+      document.getElementById('pedidosTable').innerHTML = '<tr><td colspan="5" class="empty">Nenhum pedido encontrado.</td></tr>';
+      return;
+    }
+    document.getElementById('pedidosTable').innerHTML = list.slice(0,20).map(p => `
+      <tr>
+        <td>#${p.id}</td>
+        <td>${p.destinatario || p.cliente || '—'}</td>
+        <td><span class="badge badge-adj">${p.status || '—'}</span></td>
+        <td>${p.entregador?.nome || '—'}</td>
+        <td>${fmtDate(p.criado_em || p.createdAt)}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('pedidosTable').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar pedidos.</td></tr>';
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+checkStatus();
+loadProducts();
+if (token) {
+  // auto restore admin session
+}
+</script>
+</body>
+</html>

@@ -48,6 +48,9 @@ app.get('/api/debug-logs', (req, res) => {
     });
 });
 
+// Serve frontend
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Serve PDFs route
 app.use('/uploads/pdfs', express.static(path.join(__dirname, '../uploads/pdfs')));
 
@@ -76,10 +79,6 @@ app.use('/api/estoque', require('./routes/estoque'));
 app.use('/api/stock', require('./routes/stock'));
 app.use('/api/version', require('./routes/version'));
 
-
-app.get('/', (req, res) => {
-    res.send('API Conexão BR277 funcionando!');
-});
 
 // Middleware para capturar 404 e fornecer mensagem detalhada para debug
 app.use((req, res) => {
